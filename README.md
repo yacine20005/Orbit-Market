@@ -1,28 +1,28 @@
-# 🚀 Orbit Market - Multi-Game Vendor & World State Tracker 🌌
+# Orbit Market - Multi-Game Vendor & World State Tracker 🌌
 
 ## Your Ultimate Hub for Destiny 2 & Warframe Live Data
 
 ----
 
-## 🌟 About the Project
+## About the Project
 
 **Orbit Market** is a **cross-platform mobile application** that serves as your ultimate companion for **Destiny 2** and **Warframe**. Built with **Expo (React Native)** for the frontend and **FastAPI (Python)** for the backend, this application provides real-time access to vendor inventories, world states, and essential game information across both games.
 
-### 🎯 **Current Features (Destiny 2):**
+### **Current Features (Destiny 2):**
 
-- ✅ **Xûr Inventory Tracker** - Fully functional and live!
-- 🔧 **All Destiny 2 Vendors** - Coming soon!
+- **Xûr Inventory Tracker** - Fully functional and live!
+- **All Destiny 2 Vendors** - Coming soon!
 
-### 🌟 **Upcoming Features (Warframe):**
+### **Upcoming Features (Warframe):**
 
-- 🌍 **World State Information** - Real-time Warframe world data
-- 📊 **Market Data & More** - Comprehensive Warframe ecosystem tracking
+- **World State Information** - Real-time Warframe world data
+- **Market Data & More** - Comprehensive Warframe ecosystem tracking
 
 ----
 
-## ✨ Current Features
+## Current Features
 
-### 🔮 **Destiny 2 - Xûr Tracker (Live!)**
+### **Destiny 2 - Xûr Tracker (Live!)**
 
 - **Real-time Xur Inventory:** See what Xûr is offering right now
 - **Detailed Item Information:** View names, icons, and base stats for all items
@@ -30,7 +30,7 @@
 - **Cost Breakdown:** Easily see the materials and currency required for each purchase
 - **Automatic Data Refresh:** Xur's inventory updates automatically with his weekly arrival
 
-### 🚀 **Coming Soon**
+### **Coming Soon**
 
 - **All Destiny 2 Vendors:** Ada-1, Banshee-44, Saint-14, and more!
 - **Warframe World State:** Invasions, Alerts, Sorties, Nightwave, and current events
@@ -38,7 +38,7 @@
 
 ----
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 ### Frontend (Mobile Application)
 
@@ -56,7 +56,7 @@
 
 ----
 
-## 💡 Project Vision & Goals
+## Project Vision & Goals
 
 This project represents an ambitious expansion from a single-game utility to a **comprehensive multi-game information hub**. My objectives include:
 
@@ -67,7 +67,7 @@ This project represents an ambitious expansion from a single-game utility to a *
 5. **Performance Optimization:** Handle large datasets (Destiny 2 Manifest) while maintaining fast response times
 6. **Portfolio Showcase:** Demonstrate full-stack capabilities and multi-platform integration skills
 
-### 🎮 **Game Coverage Strategy**
+### **Game Coverage Strategy**
 
 **Phase 1 (Current):** Destiny 2 Xûr - ✅ **LIVE**
 **Phase 2 (In Progress):** All Destiny 2 Vendors
@@ -76,7 +76,7 @@ This project represents an ambitious expansion from a single-game utility to a *
 
 ----
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The application uses a **multi-game client-server architecture** designed for scalability and performance:
 
@@ -102,7 +102,7 @@ The application uses a **multi-game client-server architecture** designed for sc
                                             +-----------------------+
 ```
 
-### 🔧 **Key Architectural Decisions:**
+### **Key Architectural Decisions:**
 
 - **Centralized Data Processing:** Heavy manifest operations handled server-side
 - **Optimized Mobile Performance:** Lightweight client with efficient data consumption
@@ -111,31 +111,19 @@ The application uses a **multi-game client-server architecture** designed for sc
 
 ----
 
-## 🔮 Roadmap & Future Enhancements
+## Roadmap & Future Enhancements
 
-### 🎯 **Immediate Goals**
+### **Immediate Goals**
 
 - **Complete Destiny 2 Vendor Coverage:** Ada-1, Banshee-44, Saint-14, Trials, Iron Banner
 - **Warframe Integration:** World State API implementation
 - **Enhanced UI/UX:** Game-specific themes and improved navigation
 
-### 🚀 **Long-term Vision**
+### **Long-term Vision**
 
 - **Additional Games:** Potential expansion to other live-service games
 - **Community Features:** User favorites, notifications, sharing
 - **Advanced Analytics:** Vendor rotation patterns, price tracking
 - **Cloud Deployment:** Global accessibility and scalability 
-
-----
-
-## 🤝 Contribution
-
-Contributions are always welcome\! If you have ideas, improvements, or encounter any issues, please feel free to open an issue or submit a pull request.
-
-----
-
-## 📧 Contact
-
-For any questions or further information, please feel free to reach out via my GitHub profile.
 
 ----
