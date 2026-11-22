@@ -1,0 +1,2849 @@
+{
+  "38855301": {
+    "hash": 38855301,
+    "name": "Staccato-46",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/104ab97e071b90fd9443f8f0b02c53ee.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 14,
+    "itemTypeDisplayName": "Scout Rifle",
+    "classType": 3,
+    "flavorText": "SUROS invites you to shorten their notes.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 62,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 39,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 44,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 38,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 40,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 63,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1636108362,
+        "name": "Precision Frame",
+        "slot": "Intrinsic",
+        "description": "This weapon's recoil pattern is more predictably vertical.",
+        "icon": "/common/destiny2_content/icons/e9dd736124e8ef94048901a279a5bb18.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "46532100": {
+    "hash": 46532100,
+    "name": "Flawless Lighthouse Passage",
+    "description": "Grants access to this week's Trials of Osiris tournament. \n\nAmazing, Guardian—you have earned a Flawless Lighthouse Passage! \n\nThis Passage now tracks your longest win streak on a Flawless Passage. Flawless and active win streaks contribute to your total Crucible Performance Multiplier. Each match completed with a full fireteam grants a bonus chance for additional rewards.",
+    "icon": "/common/destiny2_content/icons/b95d25bda97119e53682c9da6e9316c4.jpg",
+    "rarity": "Exotic",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Trials Passage",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "171866827": {
+    "hash": 171866827,
+    "name": "Raid/Dungeon Threader",
+    "description": "Obtain an Armor Synthesis bounty with a randomly selected raid/dungeon objective.\n\nYou can complete {var:95519481} Armor Synthesis bounties for each class.",
+    "icon": "/common/destiny2_content/icons/c0bf19035c93dc40cca4db4973484465.png",
+    "rarity": "Legendary",
+    "itemType": 20,
+    "itemSubType": 32,
+    "itemTypeDisplayName": "Armor Synthesis Bounty",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "220835462": {
+    "hash": 220835462,
+    "name": "Iron Banner Engram",
+    "description": "An engram with a Gear Tiered weapon. Gear Tier depends on reward score.",
+    "icon": "/common/destiny2_content/icons/0ffe06a1922913a075ed10488c3c06da.png",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Tier 3 Engram",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "220944791": {
+    "hash": 220944791,
+    "name": "Fugue-55",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/5f4b175a57a9b1cd401854f8d43a0a27.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 12,
+    "itemTypeDisplayName": "Sniper Rifle",
+    "classType": 3,
+    "flavorText": "SUROS invites you to follow our lead.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 70,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 54,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 49,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 47,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 45,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 66,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "353704689": {
+    "hash": 353704689,
+    "name": "Ascendant Alloy",
+    "description": "Used in weapon shaping to enhance traits and upgrading weapon tiers. Obtained from challenging activities or purchasable from the Cryptarch in the Tower.",
+    "icon": "/common/destiny2_content/icons/b4d6dbc8eda17711bfb8fedb6e48cc80.jpg",
+    "rarity": "Exotic",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Material",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "477057676": {
+    "hash": 477057676,
+    "name": "Frumious Mask",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/88de030a650ba305fa2d3483444305ff.jpg",
+    "rarity": "Legendary",
+    "itemType": 2,
+    "itemSubType": 26,
+    "itemTypeDisplayName": "Helmet",
+    "classType": 1,
+    "flavorText": "You put the \"snicker\" in \"snicker-snack.\"",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 14,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 19,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 16,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 20,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 10,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 19,
+        "maximum": 30
+      }
+    ],
+    "perks": []
+  },
+  "507400048": {
+    "hash": 507400048,
+    "name": "Ophidian Aspect",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/a3e9b60f50480547349cf245f30b28f5.jpg",
+    "rarity": "Exotic",
+    "itemType": 2,
+    "itemSubType": 27,
+    "itemTypeDisplayName": "Gauntlets",
+    "classType": 2,
+    "flavorText": "\"Have I the aspic in my lips?\"",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 18,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 20,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 19,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 20,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 20,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 9,
+        "maximum": 30
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1147638875,
+        "name": "Cobra Totemic",
+        "slot": "Intrinsic",
+        "description": "Improves melee range as well as ready speed and reload for weapons. Provides a small benefit to airborne effectiveness for all weapons.",
+        "icon": "/common/destiny2_content/icons/3945ff76d8e7ec70991cb0f6601c6797.png",
+        "isExotic": true
+      }
+    ]
+  },
+  "540971012": {
+    "hash": 540971012,
+    "name": "PvP Threader",
+    "description": "Obtain an Armor Synthesis bounty with a randomly selected PvP objective.\n\nYou can complete {var:95519481} Armor Synthesis bounties for each class.",
+    "icon": "/common/destiny2_content/icons/e36c64b250938567c52411bb4d4cdd63.png",
+    "rarity": "Legendary",
+    "itemType": 20,
+    "itemSubType": 32,
+    "itemTypeDisplayName": "Armor Synthesis Bounty",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "553950490": {
+    "hash": 553950490,
+    "name": "Strange Engram",
+    "description": "An engram with complex markers.\n\nContains a random weapon or armor piece from Xûr.",
+    "icon": "/common/destiny2_content/icons/1563b4c3cf617ac6011581c1c4b5f162.png",
+    "rarity": "Legendary",
+    "itemType": 8,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Engram",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "583402086": {
+    "hash": 583402086,
+    "name": "Lighthouse Passage",
+    "description": "Grants access to this week's Trials of Osiris tournament. Challenge yourself in a high-stakes arena in order to gain access to the Lighthouse.\n\nThis Passage grants access to the Lighthouse upon reaching 7 wins and provides bonuses based on win streaks. Each match completed with a full fireteam grants a bonus chance for additional rewards.",
+    "icon": "/common/destiny2_content/icons/e5ec345631ca88a62ce5d62cded47049.jpg",
+    "rarity": "Exotic",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Trials Passage",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "723818653": {
+    "hash": 723818653,
+    "name": "Beyond the Jovians",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/2ebb5872f93aec5b5b74cb407ad69913.jpg",
+    "rarity": "Legendary",
+    "itemType": 14,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Emblem",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "737170669": {
+    "hash": 737170669,
+    "name": "Valkyrie Zero",
+    "description": "Equip this shader to change the color of your gear.",
+    "icon": "/common/destiny2_content/icons/a2831d688d2b138f9d2c10727ecd6c22.jpg",
+    "rarity": "Legendary",
+    "itemType": 19,
+    "itemSubType": 20,
+    "itemTypeDisplayName": "Shader",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "796577360": {
+    "hash": 796577360,
+    "name": "Aeon Safe",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/7963b44801745431cdd7638c5445fe49.jpg",
+    "rarity": "Exotic",
+    "itemType": 2,
+    "itemSubType": 27,
+    "itemTypeDisplayName": "Gauntlets",
+    "classType": 0,
+    "flavorText": "\"We are unique emanations of the same shared Light.\" —Cult of the Aeons",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 22,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 24,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 13,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 18,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 17,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 20,
+        "maximum": 30
+      }
+    ],
+    "perks": [
+      {
+        "hash": 3268255645,
+        "name": "Sect of Force",
+        "slot": "Aeon Cult Mod",
+        "description": "You specialize in punishing powerful combatants before they can harm your allies.",
+        "icon": "/common/destiny2_content/icons/b8a55863e8d952535d306476df20cf3c.jpg",
+        "isExotic": false
+      }
+    ]
+  },
+  "882778888": {
+    "hash": 882778888,
+    "name": "Rose",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/6e4408c36fd0fc44222ba42f8e73775b.jpg",
+    "rarity": "Legendary",
+    "itemType": 3,
+    "itemSubType": 9,
+    "itemTypeDisplayName": "Hand Cannon",
+    "classType": 3,
+    "flavorText": "In his strong hand the man held a Rose. And his aura burned bright.",
+    "rollType": "curated",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 84,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 43,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 45,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 60,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 55,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 85,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1458010786,
+        "name": "Lightweight Frame",
+        "slot": "Intrinsic",
+        "description": "Superb handling. Move faster with this weapon equipped.",
+        "icon": "/common/destiny2_content/icons/6db8cd21c2b3e6fffeb6f111d6c70dd2.png",
+        "isExotic": true
+      },
+      {
+        "hash": 3250034553,
+        "name": "Hammer-Forged Rifling",
+        "slot": "Barrel",
+        "description": "Durable ranged barrel.\n  •  Increases range",
+        "icon": "/common/destiny2_content/icons/2b9eb6d4489cffc18c10223279198bcc.png",
+        "isExotic": false
+      },
+      {
+        "hash": 106909392,
+        "name": "Tactical Mag",
+        "slot": "Magazine",
+        "description": "This weapon has multiple tactical improvements.\n  •  Slightly increases stability\n  •  Increases reload speed\n  •  Slightly increases magazine size",
+        "icon": "/common/destiny2_content/icons/f0e309a267b25279a871d182f8910bcc.png",
+        "isExotic": false
+      },
+      {
+        "hash": 247725512,
+        "name": "Rapid Hit",
+        "slot": "Trait",
+        "description": "Rapid precision hits temporarily increase stability and reload speed.",
+        "icon": "/common/destiny2_content/icons/de22847fa94634a487758041887bcdaa.png",
+        "isExotic": false
+      },
+      {
+        "hash": 699525795,
+        "name": "Eye of the Storm",
+        "slot": "Trait",
+        "description": "This weapon becomes more accurate and boosts handling as your health gets lower.",
+        "icon": "/common/destiny2_content/icons/8f4755f9068959b26b8829641e5725ad.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3917450714,
+        "name": "Textured Grip",
+        "slot": "Grip",
+        "description": "The friction on this weapon's grip is particularly strong.\n  •  Greatly increases handling speed\n  •  Slightly decreases stability",
+        "icon": "/common/destiny2_content/icons/f1a31e1710aac5b4fb1715d174093199.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "903043774": {
+    "hash": 903043774,
+    "name": "Exotic Engram",
+    "description": "An engram with a predestined outcome.\n\nContains a new Exotic if any of the possible rewards remain to be collected.",
+    "icon": "/common/destiny2_content/icons/3e6a698e1a8a5fb446fdcbf1e63c5269.png",
+    "rarity": "Exotic",
+    "itemType": 8,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Engram",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "1401276266": {
+    "hash": 1401276266,
+    "name": "Cantata-57",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/b9003235136694f72c31b42de4164bdc.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 9,
+    "itemTypeDisplayName": "Hand Cannon",
+    "classType": 3,
+    "flavorText": "SUROS invites you to flex your pipes.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 84,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 46,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 51,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 52,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 45,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 82,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "1578915183": {
+    "hash": 1578915183,
+    "name": "Razor's Edge",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/f0125aa314059eff92457d080657dddc.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 18,
+    "itemTypeDisplayName": "Sword",
+    "classType": 3,
+    "flavorText": "Not a soul would speak of what remained after that wretched blade found its marks.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 60,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 40,
+        "maximum": 100
+      },
+      {
+        "hash": 2961396640,
+        "name": "Charge Time",
+        "value": 20,
+        "maximum": 1000
+      },
+      {
+        "hash": 3871231066,
+        "name": "Magazine",
+        "value": 46,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 263649945,
+        "name": "Vortex Frame",
+        "slot": "Intrinsic",
+        "description": "[Heavy Attack]  : Launch a heavy spin attack.\nHeavy attacks are stronger with full energy.",
+        "icon": "/common/destiny2_content/icons/23e50e126159f0f22983f73d6a246f0d.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3989629871,
+        "name": "Skulking Wolf",
+        "slot": "Origin Trait",
+        "description": "While at low health, final blows with this weapon grant enhanced radar, remove you from opposing Guardians' radar, and make combatants less aggressive toward you.",
+        "icon": "/common/destiny2_content/icons/451e0f091bd3e7245a82e4efc01ad8c3.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "1629007932": {
+    "hash": 1629007932,
+    "name": "Vest of the Exile",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/346843dcd859df0a4c3ba715ba6a8dbc.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Chest Armor",
+    "classType": 1,
+    "flavorText": "\"Let the heat melt your body so your soul might flow with the river of time.\" —Parables of the Allspring",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 16,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 21,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 12,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 11,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 19,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 9,
+        "maximum": 30
+      }
+    ],
+    "perks": []
+  },
+  "1751871147": {
+    "hash": 1751871147,
+    "name": "The Messenger",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/b70bbed7f611b521a85a931985186ee3.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 13,
+    "itemTypeDisplayName": "Pulse Rifle",
+    "classType": 3,
+    "flavorText": "The bearer of bad news.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 33,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 66,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 54,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 31,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 38,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 37,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1019291327,
+        "name": "High-Impact Frame",
+        "slot": "Intrinsic",
+        "description": "Slow firing and high damage. This weapon is more accurate when stationary, moving slowly, and aiming down sights.",
+        "icon": "/common/destiny2_content/icons/34573143849cf910d2381554bb57a10d.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 65797256,
+        "name": "Fleet Footed",
+        "slot": "Origin Trait",
+        "description": "Dealing damage grants you a short window of increased movement speed and airborne effectiveness. Landing a final blow increases these effects.",
+        "icon": "/common/destiny2_content/icons/d89f88c83b11459a6804958b98353387.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "1762785662": {
+    "hash": 1762785662,
+    "name": "VS Chill Inhibitor",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/6c1d34f6dcca37c6b4b8dde37f4c94ba.jpg",
+    "rarity": "Legendary",
+    "itemType": 3,
+    "itemSubType": 23,
+    "itemTypeDisplayName": "Grenade Launcher",
+    "classType": 3,
+    "flavorText": "Research|EyesOnly|Castor|2142| Dr. Bray, I'm forwarding stationside casualty statistics. Can we talk?",
+    "rollType": "curated",
+    "stats": [
+      {
+        "hash": 3614673599,
+        "name": "Blast Radius",
+        "value": 20,
+        "maximum": 100
+      },
+      {
+        "hash": 2523465841,
+        "name": "Velocity",
+        "value": 59,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 25,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 25,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 29,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 32,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 2353477480,
+        "name": "Rapid-Fire Frame",
+        "slot": "Intrinsic",
+        "description": "Deeper ammo reserves. Slightly faster reload when magazine is empty.",
+        "icon": "/common/destiny2_content/icons/801d62d1f9783bee81d5700c54c24fda.png",
+        "isExotic": true
+      },
+      {
+        "hash": 3798852852,
+        "name": "Smart Drift Control",
+        "slot": "Launcher Barrel",
+        "description": "This barrel is broadly optimized for firing control.\n  •  Moderately controls recoil\n  •  Increases stability\n  •  Increases handling speed\n  •  Slightly increases projectile speed",
+        "icon": "/common/destiny2_content/icons/5c9fe3f49086b4d6cecc3431751edc02.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3373736292,
+        "name": "Sticky Grenades",
+        "slot": "Magazine",
+        "description": "Grenades fired from this weapon attach on impact and detonate when enemies are in proximity.",
+        "icon": "/common/destiny2_content/icons/c2daa7ba870ad24bca0c6c1d2ac5db74.png",
+        "isExotic": false
+      },
+      {
+        "hash": 960810156,
+        "name": "Danger Zone",
+        "slot": "Trait",
+        "description": "The blast radius of this weapon increases when surrounded by combatants. While active, this weapon deals significantly less damage to the wielder.",
+        "icon": "/common/destiny2_content/icons/9f570c66f1cee6d088846ea54250a2ff.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3078487919,
+        "name": "Bait and Switch",
+        "slot": "Trait",
+        "description": "Deal damage with all equipped weapons within a short time to give this weapon a damage boost.",
+        "icon": "/common/destiny2_content/icons/bc91e95edfbc9163dd88339a93b66913.png",
+        "isExotic": false
+      },
+      {
+        "hash": 4139916815,
+        "name": "Bray Legacy",
+        "slot": "Origin Trait",
+        "description": "Damage with this weapon generates a small amount of ability energy for the one closest to a full charge.",
+        "icon": "/common/destiny2_content/icons/af7941603fad81f37bd13463d0583e56.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "1866778462": {
+    "hash": 1866778462,
+    "name": "The Hothead (Adept)",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/f6d001b14d24ce3d97df05cec0bf7acb.jpg",
+    "rarity": "Legendary",
+    "itemType": 3,
+    "itemSubType": 10,
+    "itemTypeDisplayName": "Rocket Launcher",
+    "classType": 3,
+    "flavorText": "Think of it as a weaponized temper tantrum.",
+    "rollType": "curated",
+    "stats": [
+      {
+        "hash": 3614673599,
+        "name": "Blast Radius",
+        "value": 50,
+        "maximum": 100
+      },
+      {
+        "hash": 2523465841,
+        "name": "Velocity",
+        "value": 57,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 40,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 47,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 45,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 67,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 3525010810,
+        "name": "Quick Launch",
+        "slot": "Launcher Barrel",
+        "description": "This weapon's barrel provides faster projectiles and much faster aiming.\n  •  Greatly increases handling speed\n  •  Increases projectile speed",
+        "icon": "/common/destiny2_content/icons/dfad5d8b00b79c4393943b791a624874.png",
+        "isExotic": false
+      },
+      {
+        "hash": 1996142143,
+        "name": "Black Powder",
+        "slot": "Magazine",
+        "description": "This weapon's explosives are more effective.\n  •  Slightly increases blast radius\n  •  Decreases stability",
+        "icon": "/common/destiny2_content/icons/19deadeab109c6a2907900d6fe0d6142.png",
+        "isExotic": false
+      },
+      {
+        "hash": 2621346526,
+        "name": "Ensemble",
+        "slot": "Trait",
+        "description": "Improved handling and reload speed when allies are nearby.",
+        "icon": "/common/destiny2_content/icons/421d6325598857bc63c1df0f25607cde.png",
+        "isExotic": false
+      },
+      {
+        "hash": 1546637391,
+        "name": "Vorpal Weapon",
+        "slot": "Trait",
+        "description": "Increased damage against bosses, vehicles, and Guardians with their Super active.",
+        "icon": "/common/destiny2_content/icons/bc5130b227ee577f2678ec2d2c97bf4a.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "1961110335": {
+    "hash": 1961110335,
+    "name": "Lethal Abundance",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/7d1a259e4bba6673e160837784b91ad7.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 6,
+    "itemTypeDisplayName": "Auto Rifle",
+    "classType": 3,
+    "flavorText": "One can, indeed, have too much of a good thing.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 31,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 80,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 31,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 32,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 36,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 55,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1019291327,
+        "name": "High-Impact Frame",
+        "slot": "Intrinsic",
+        "description": "Slow firing and high damage. This weapon is more accurate when stationary, moving slowly, and aiming down sights.",
+        "icon": "/common/destiny2_content/icons/34573143849cf910d2381554bb57a10d.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3989629871,
+        "name": "Skulking Wolf",
+        "slot": "Origin Trait",
+        "description": "While at low health, final blows with this weapon grant enhanced radar, remove you from opposing Guardians' radar, and make combatants less aggressive toward you.",
+        "icon": "/common/destiny2_content/icons/451e0f091bd3e7245a82e4efc01ad8c3.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "2059601679": {
+    "hash": 2059601679,
+    "name": "Cover of the Exile",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/13d4dd588461c4ba3f1bbfb260810443.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Helmet",
+    "classType": 1,
+    "flavorText": "\"Don't you find it strange that the one called the Speaker rarely has anything useful to say?\" —Sayings of the Disciples",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 19,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 21,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 18,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 20,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 13,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 20,
+        "maximum": 30
+      }
+    ],
+    "perks": []
+  },
+  "2109877638": {
+    "hash": 2109877638,
+    "name": "Ballidorse Wrathweavers",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/0b6052a09f8d04089eda67529392d770.jpg",
+    "rarity": "Exotic",
+    "itemType": 2,
+    "itemSubType": 27,
+    "itemTypeDisplayName": "Gauntlets",
+    "classType": 2,
+    "flavorText": "They do not yet know what true cold is.",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 18,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 14,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 12,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 19,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 15,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 20,
+        "maximum": 30
+      }
+    ],
+    "perks": [
+      {
+        "hash": 2894608781,
+        "name": "Hearts of Ice",
+        "slot": "Intrinsic",
+        "description": "Targets frozen by your Winter's Wrath Super take increased Shatter damage. Allies in range of your Winter's Wrath shockwave and Frostpulse gain Frost Armor and deal increased damage with Stasis weapons. Granting these buffs to allies grants you Super energy.",
+        "icon": "/common/destiny2_content/icons/c9914b643a1a99b9115d092fc42f1ac3.png",
+        "isExotic": true
+      }
+    ]
+  },
+  "2125848607": {
+    "hash": 2125848607,
+    "name": "Xenology",
+    "description": "Complete Ops activities with performance grade B or higher.\n\nAdditional progress is awarded for better performance grades, activities with a longer average duration, and for succeeding with clanmates.",
+    "icon": "/common/destiny2_content/icons/8a45db3e03ace3dbc923b463d89886a3.jpg",
+    "rarity": "Exotic",
+    "itemType": 12,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Quest Step",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "2144437236": {
+    "hash": 2144437236,
+    "name": "Pizzicato-22",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/7e3f1e52d7fe56553ad76faeea38823a.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 24,
+    "itemTypeDisplayName": "Submachine Gun",
+    "classType": 3,
+    "flavorText": "Suros asks that you tread firmly.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 20,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 43,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 50,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 61,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 50,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 45,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 4008116374,
+        "name": "Suros Synergy",
+        "slot": "Origin Trait",
+        "description": "Reloading grants this weapon bonus handling and reduces incoming flinch for a short time.",
+        "icon": "/common/destiny2_content/icons/49a2da0bae3d3c2c737e85a374ccdaa6.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "2206205138": {
+    "hash": 2206205138,
+    "name": "Willful Hamartia",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/1acbf273e3bbe5f1472b6aeaf4a89b00.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 22,
+    "itemTypeDisplayName": "Linear Fusion Rifle",
+    "classType": 3,
+    "flavorText": "Go in with your eyes open.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 41,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 52,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 52,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 29,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 32,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 66,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 3530948111,
+        "name": "Adaptive Burst",
+        "slot": "Intrinsic",
+        "description": "Fires a three-round burst.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 65797256,
+        "name": "Fleet Footed",
+        "slot": "Origin Trait",
+        "description": "Dealing damage grants you a short window of increased movement speed and airborne effectiveness. Landing a final blow increases these effects.",
+        "icon": "/common/destiny2_content/icons/d89f88c83b11459a6804958b98353387.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "2277616134": {
+    "hash": 2277616134,
+    "name": "Point of the Stag",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/82cfc822a938ecc8415eb42f405b0e5d.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 31,
+    "itemTypeDisplayName": "Combat Bow",
+    "classType": 3,
+    "flavorText": "Gore befalls those who do not respect the hart.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 76,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 40,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 56,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 40,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 72,
+        "maximum": 100
+      },
+      {
+        "hash": 2961396640,
+        "name": "Charge Time",
+        "value": 60,
+        "maximum": 1000
+      }
+    ],
+    "perks": [
+      {
+        "hash": 715195141,
+        "name": "Precision Frame",
+        "slot": "Intrinsic",
+        "description": "Compound Bow. Longer draw time optimized for damage. \n[Reload]  : Use while drawn to cancel the shot.",
+        "icon": "/common/destiny2_content/icons/db45b9d8b807d52fab288e8c04733065.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3989629871,
+        "name": "Skulking Wolf",
+        "slot": "Origin Trait",
+        "description": "While at low health, final blows with this weapon grant enhanced radar, remove you from opposing Guardians' radar, and make combatants less aggressive toward you.",
+        "icon": "/common/destiny2_content/icons/451e0f091bd3e7245a82e4efc01ad8c3.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "2362430352": {
+    "hash": 2362430352,
+    "name": "Stoicism",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/9db95c112130c018f823f394668cfb5a.jpg",
+    "rarity": "Exotic",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Titan Mark",
+    "classType": 0,
+    "flavorText": "We are the final stand. The fortress in the storm.",
+    "stats": [],
+    "perks": [
+      {
+        "hash": 3573490509,
+        "name": "Spirit of Severance",
+        "slot": "Intrinsic",
+        "description": "Powered melee or finisher final blows unleash a damaging explosion.",
+        "icon": "/common/destiny2_content/icons/baed176aaf20399a3abb8b287790747a.png",
+        "isExotic": true
+      },
+      {
+        "hash": 3573490504,
+        "name": "Spirit of Contact",
+        "slot": "Intrinsic",
+        "description": "Damaging a target with a powered melee causes all nearby targets to suffer lightning strikes and become jolted.",
+        "icon": "/common/destiny2_content/icons/a4ead8e3316d22dbb9fc48e6c643dde3.png",
+        "isExotic": true
+      },
+      {
+        "hash": 1656746282,
+        "name": "Locked Artifice Socket",
+        "slot": "Artifice Armor Mod",
+        "description": "Upgrade this armor to Artifice armor to unlock this mod socket.",
+        "icon": "/common/destiny2_content/icons/e0f4d253fed747aac5378163ade2ff30.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "2392018715": {
+    "hash": 2392018715,
+    "name": "Frumious Vest",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/a986dd2762396267d9b3e30628b990b9.jpg",
+    "rarity": "Legendary",
+    "itemType": 2,
+    "itemSubType": 28,
+    "itemTypeDisplayName": "Chest Armor",
+    "classType": 1,
+    "flavorText": "When have you ever known Hunters to do as they were told?",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 19,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 7,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 2,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 4,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 1,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 5,
+        "maximum": 30
+      }
+    ],
+    "perks": []
+  },
+  "2413746134": {
+    "hash": 2413746134,
+    "name": "Forge's Pledge",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/05e08a2738b01174aeef0c8ac37a4831.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 13,
+    "itemTypeDisplayName": "Pulse Rifle",
+    "classType": 3,
+    "flavorText": "\"Say whatever you like. You'd just better be brave enough to say it to his face.\"  —Lady Efrideet",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 29,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 38,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 52,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 39,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 42,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 61,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "2605845438": {
+    "hash": 2605845438,
+    "name": "Reghusk's Pledge",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/259e5d7d17bb6fef6a94ca9b6472791e.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 6,
+    "itemTypeDisplayName": "Auto Rifle",
+    "classType": 3,
+    "flavorText": "Forged by the Iron War Beasts in honor of their Valus.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 18,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 30,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 54,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 46,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 53,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 74,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 878286503,
+        "name": "Rapid-Fire Frame",
+        "slot": "Intrinsic",
+        "description": "Deeper ammo reserves. Slightly faster reload when magazine is empty.",
+        "icon": "/common/destiny2_content/icons/801d62d1f9783bee81d5700c54c24fda.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3989629871,
+        "name": "Skulking Wolf",
+        "slot": "Origin Trait",
+        "description": "While at low health, final blows with this weapon grant enhanced radar, remove you from opposing Guardians' radar, and make combatants less aggressive toward you.",
+        "icon": "/common/destiny2_content/icons/451e0f091bd3e7245a82e4efc01ad8c3.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "2653171213": {
+    "hash": 2653171213,
+    "name": "Astral Horizon",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/425de08c74540b44cee65d336d603fe5.jpg",
+    "rarity": "Legendary",
+    "itemType": 3,
+    "itemSubType": 7,
+    "itemTypeDisplayName": "Shotgun",
+    "classType": 3,
+    "flavorText": "Even the brightest stars eventually set.",
+    "rollType": "curated",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 80,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 24,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 27,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 28,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 33,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 34,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 3983457027,
+        "name": "Aggressive Frame",
+        "slot": "Intrinsic",
+        "description": "Hard-hitting, high recoil. Increases rate of fire after final blows.",
+        "icon": "/common/destiny2_content/icons/64209c4fd20513b33109c374179d0958.png",
+        "isExotic": true
+      },
+      {
+        "hash": 1332244541,
+        "name": "Rifled Barrel",
+        "slot": "Barrel",
+        "description": "Ranged shotgun barrel.\n  •  Increases range\n  •  Greatly decreases handling speed",
+        "icon": "/common/destiny2_content/icons/79d5f1f469d3290cfb849f4b3e6fc16b.png",
+        "isExotic": false
+      },
+      {
+        "hash": 791862061,
+        "name": "Assault Mag",
+        "slot": "Magazine",
+        "description": "This shotgun's magazine is optimized for quick combat.\n  •  Greatly increases stability\n  •  Increases rate of fire",
+        "icon": "/common/destiny2_content/icons/953cfdeb2703978b1ab449b991b98989.png",
+        "isExotic": false
+      },
+      {
+        "hash": 4071163871,
+        "name": "Threat Detector",
+        "slot": "Trait",
+        "description": "Increased reload, stability, and handling when enemies are in close proximity.",
+        "icon": "/common/destiny2_content/icons/9611bdbc48aff898193fd5f705c7cf30.png",
+        "isExotic": false
+      },
+      {
+        "hash": 47981717,
+        "name": "Opening Shot",
+        "slot": "Trait",
+        "description": "Improved accuracy and range on the opening shot of attack.",
+        "icon": "/common/destiny2_content/icons/276e8ce23910c6ee2a6b88b076a2004c.png",
+        "isExotic": false
+      },
+      {
+        "hash": 2988596335,
+        "name": "Alacrity",
+        "slot": "Origin Trait",
+        "description": "Gain increased reload, stability, aim assist, and range when an ally is defeated. Bonus increases when multiple allies are dead at the same time or when you are running solo.",
+        "icon": "/common/destiny2_content/icons/c38aff78c3d2f91d47afa3ddb90acab6.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "2854025240": {
+    "hash": 2854025240,
+    "name": "Grips of the Exile",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/2762d6cbaa9f8b549bf0cbe96ea36e7a.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Gauntlets",
+    "classType": 1,
+    "flavorText": "\"Strengthen the body, empower the mind.\" —Parables of the Allspring",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 20,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 11,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 6,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 5,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 8,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": -1,
+        "maximum": 30
+      }
+    ],
+    "perks": []
+  },
+  "3158812152": {
+    "hash": 3158812152,
+    "name": "The Xûrfboard",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/0f9ed83ab7bbe0282f9974c62f930cf4.jpg",
+    "rarity": "Exotic",
+    "itemType": 22,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Vehicle",
+    "classType": 3,
+    "flavorText": "Who knows where the next wave will take you.",
+    "stats": [],
+    "perks": [
+      {
+        "hash": 3910216754,
+        "name": "SKIMMER CONTROLS",
+        "slot": "Skimmer Mod",
+        "description": "[Brake]  : Take to the air.\n[Crouch]  : Grind the air.",
+        "icon": "/common/destiny2_content/icons/b90af3b62a566f56b079b433bf87a793.png",
+        "isExotic": false
+      },
+      {
+        "hash": 2978337238,
+        "name": "Custom Drive",
+        "slot": "Sparrow Engine",
+        "description": "An expertly tuned NLS drive, providing the best possible performance.",
+        "icon": "/common/destiny2_content/icons/abfaa007b2a86f05c0367e928cfcd896.png",
+        "isExotic": false
+      },
+      {
+        "hash": 36293031,
+        "name": "Happy Horn",
+        "slot": "Sparrow Mod",
+        "description": "Honk!\n\nPress [###DestinyNamedSubstitutions.ui_player_action_vehicle_honk_button###] to honk your vehicle's equipped horn.",
+        "icon": "/common/destiny2_content/icons/042b7d55d59ffdf9b7d7f7a9c0b5a245.jpg",
+        "isExotic": false
+      }
+    ]
+  },
+  "3211624072": {
+    "hash": 3211624072,
+    "name": "Multimach CCX",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/c2dc5dee3368836a8a0f30a301ca490f.jpg",
+    "rarity": "Legendary",
+    "itemType": 3,
+    "itemSubType": 24,
+    "itemTypeDisplayName": "Submachine Gun",
+    "classType": 3,
+    "flavorText": "Friends are as companions on a journey who ought to aid each other to persevere.",
+    "rollType": "curated",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 15,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 29,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 38,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 70,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 26,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 55,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1458010786,
+        "name": "Lightweight Frame",
+        "slot": "Intrinsic",
+        "description": "Superb handling. Move faster with this weapon equipped.",
+        "icon": "/common/destiny2_content/icons/6db8cd21c2b3e6fffeb6f111d6c70dd2.png",
+        "isExotic": true
+      },
+      {
+        "hash": 3250034553,
+        "name": "Hammer-Forged Rifling",
+        "slot": "Barrel",
+        "description": "Durable ranged barrel.\n  •  Increases range",
+        "icon": "/common/destiny2_content/icons/2b9eb6d4489cffc18c10223279198bcc.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3142289711,
+        "name": "Accurized Rounds",
+        "slot": "Magazine",
+        "description": "This weapon can fire longer distances.\n  •  Increases range",
+        "icon": "/common/destiny2_content/icons/d85024478504205359c7fb52dbc4f6b6.png",
+        "isExotic": false
+      },
+      {
+        "hash": 4152709778,
+        "name": "Iron Gaze",
+        "slot": "Trait",
+        "description": "Massively improves weapon target acquisition at the cost of weapon range.",
+        "icon": "/common/destiny2_content/icons/a09bd02ced2eaf494fe335858c256154.png",
+        "isExotic": false
+      },
+      {
+        "hash": 591790007,
+        "name": "Iron Reach",
+        "slot": "Trait",
+        "description": "Massively improves weapon range at the cost of weapon stability.",
+        "icon": "/common/destiny2_content/icons/f732d5d48bf1a9bb6a33aba905af9347.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3989629871,
+        "name": "Skulking Wolf",
+        "slot": "Origin Trait",
+        "description": "While at low health, final blows with this weapon grant enhanced radar, remove you from opposing Guardians' radar, and make combatants less aggressive toward you.",
+        "icon": "/common/destiny2_content/icons/451e0f091bd3e7245a82e4efc01ad8c3.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "3276449741": {
+    "hash": 3276449741,
+    "name": "Finite Impactor",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/ae6005c0d7b6b6cdc3f2051a2f8ed539.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 9,
+    "itemTypeDisplayName": "Hand Cannon",
+    "classType": 3,
+    "flavorText": "Do not say a little in many words—say a great deal in a few.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 84,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 46,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 46,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 55,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 50,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 74,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3989629871,
+        "name": "Skulking Wolf",
+        "slot": "Origin Trait",
+        "description": "While at low health, final blows with this weapon grant enhanced radar, remove you from opposing Guardians' radar, and make combatants less aggressive toward you.",
+        "icon": "/common/destiny2_content/icons/451e0f091bd3e7245a82e4efc01ad8c3.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "3286479728": {
+    "hash": 3286479728,
+    "name": "GENOTYPENULL-ZERO",
+    "description": "Apply this shader to change the color of your gear.",
+    "icon": "/common/destiny2_content/icons/0eb0bd3973d8fe78f69d3c7a05c6101c.jpg",
+    "rarity": "Legendary",
+    "itemType": 19,
+    "itemSubType": 20,
+    "itemTypeDisplayName": "Shader",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "3381450498": {
+    "hash": 3381450498,
+    "name": "Indebted Kindness",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/352833d18ac3305cae2b0e026de06554.jpg",
+    "rarity": "Legendary",
+    "itemType": 3,
+    "itemSubType": 17,
+    "itemTypeDisplayName": "Sidearm",
+    "classType": 3,
+    "flavorText": "There is so little left. And the cost, so high…",
+    "rollType": "curated",
+    "stats": [
+      {
+        "hash": 3614673599,
+        "name": "Blast Radius",
+        "value": 35,
+        "maximum": 100
+      },
+      {
+        "hash": 2523465841,
+        "name": "Velocity",
+        "value": 56,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 48,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 45,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 28,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 80,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 2928496916,
+        "name": "Micro-Missile Frame",
+        "slot": "Intrinsic",
+        "description": "Fires self-propelled micro-missiles that explode on impact for high damage.",
+        "icon": "/common/destiny2_content/icons/0362f949c16fe72358a5c7bb93be3f60.png",
+        "isExotic": true
+      },
+      {
+        "hash": 1478423395,
+        "name": "Volatile Launch",
+        "slot": "Launcher Barrel",
+        "description": "This weapon is optimized for an especially explosive payload.\n  •  Greatly increases blast radius\n  •  Slightly decreases handling speed\n  •  Slightly decreases projectile speed",
+        "icon": "/common/destiny2_content/icons/d255c9140cf640cfc820f995d1c1e96a.png",
+        "isExotic": false
+      },
+      {
+        "hash": 2822142346,
+        "name": "High-Velocity Rounds",
+        "slot": "Magazine",
+        "description": "This weapon's projectiles are particularly light and quick.\n  •  Increases projectile speed\n  •  Increases reload speed",
+        "icon": "/common/destiny2_content/icons/2a2b757cd73305126990cd19ad011a2c.png",
+        "isExotic": false
+      },
+      {
+        "hash": 2859149211,
+        "name": "Beacon Rounds",
+        "slot": "Trait",
+        "description": "Final blows with this weapon grant your projectiles tracking and increase reload speed. Dealing further damage extends the duration.",
+        "icon": "/common/destiny2_content/icons/53b269a1760611b75170abde8ff1032c.png",
+        "isExotic": false
+      },
+      {
+        "hash": 243981275,
+        "name": "Attrition Orbs",
+        "slot": "Trait",
+        "description": "Dealing sustained damage creates an Orb of Power.",
+        "icon": "/common/destiny2_content/icons/c2092fae6ae58ca77a7f9b4434e688ef.png",
+        "isExotic": false
+      },
+      {
+        "hash": 220689851,
+        "name": "Sundering",
+        "slot": "Origin Trait",
+        "description": "Destroying vehicles and constructs or breaking target shields grants this weapon bonus reload speed and charge rate.\n\nConstructs include barricades, turrets, Stasis crystals, and other objects created in the field.",
+        "icon": "/common/destiny2_content/icons/877a57624bf7ca0e5e946f666a5b0a4b.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "3387359462": {
+    "hash": 3387359462,
+    "name": "Iron Battalion Helm",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/3e64530b6e3310d63985c21c81ca0a6c.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Helmet",
+    "classType": 0,
+    "flavorText": "\"Humanity's been waging war for as long as we've been humanity. Don't forget the old lessons.\" —Valus Saladin Forge",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 14,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 6,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 7,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 3,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": -4,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 0,
+        "maximum": 30
+      }
+    ],
+    "perks": []
+  },
+  "3519141316": {
+    "hash": 3519141316,
+    "name": "Aureus Neutralizer",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/cd8e522e2aebb8d64c832c817b719131.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 9,
+    "itemTypeDisplayName": "Hand Cannon",
+    "classType": 3,
+    "flavorText": "You needn't ask twice.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 96,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 35,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 34,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 33,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 29,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 68,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 2427219599,
+        "name": "Spread Shot",
+        "slot": "Intrinsic",
+        "description": "Fires a short range spread of pellets.",
+        "icon": "/common/destiny2_content/icons/b473eb1143bf843be894a88bedee0550.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 65797256,
+        "name": "Fleet Footed",
+        "slot": "Origin Trait",
+        "description": "Dealing damage grants you a short window of increased movement speed and airborne effectiveness. Landing a final blow increases these effects.",
+        "icon": "/common/destiny2_content/icons/d89f88c83b11459a6804958b98353387.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "3618831903": {
+    "hash": 3618831903,
+    "name": "Syncopation-53",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/8fba4bb117d4a60d493cfad491ec2358.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 13,
+    "itemTypeDisplayName": "Pulse Rifle",
+    "classType": 3,
+    "flavorText": "SUROS asks that you spice things up.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 29,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 46,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 59,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 46,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 42,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 66,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 4008116374,
+        "name": "Suros Synergy",
+        "slot": "Origin Trait",
+        "description": "Reloading grants this weapon bonus handling and reduces incoming flinch for a short time.",
+        "icon": "/common/destiny2_content/icons/49a2da0bae3d3c2c737e85a374ccdaa6.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "3650581584": {
+    "hash": 3650581584,
+    "name": "New Age Black Armory",
+    "description": "Apply this shader to change the color of your gear.",
+    "icon": "/common/destiny2_content/icons/43302b2ee28999833b3918875042d95a.jpg",
+    "rarity": "Legendary",
+    "itemType": 19,
+    "itemSubType": 20,
+    "itemTypeDisplayName": "Shader",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "3650581587": {
+    "hash": 3650581587,
+    "name": "House of Meyrin",
+    "description": "Apply this shader to change the color of your gear.",
+    "icon": "/common/destiny2_content/icons/e75e51a0369a4f09ae7997ff6594d7d3.jpg",
+    "rarity": "Legendary",
+    "itemType": 19,
+    "itemSubType": 20,
+    "itemTypeDisplayName": "Shader",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "3650581588": {
+    "hash": 3650581588,
+    "name": "Satou Tribe",
+    "description": "Apply this shader to change the color of your gear.",
+    "icon": "/common/destiny2_content/icons/44f06ed76e5afbbfda0691be2626bb66.jpg",
+    "rarity": "Legendary",
+    "itemType": 19,
+    "itemSubType": 20,
+    "itemTypeDisplayName": "Shader",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "3650581589": {
+    "hash": 3650581589,
+    "name": "Bergusian Night",
+    "description": "Apply this shader to change the color of your gear.",
+    "icon": "/common/destiny2_content/icons/9d9d76c84169095385bee08a7e7d8c0c.jpg",
+    "rarity": "Legendary",
+    "itemType": 19,
+    "itemSubType": 20,
+    "itemTypeDisplayName": "Shader",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "3721047650": {
+    "hash": 3721047650,
+    "name": "Wormhusk Crown",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/791e1be2a37d4deff98d660f2d90c158.jpg",
+    "rarity": "Exotic",
+    "itemType": 2,
+    "itemSubType": 26,
+    "itemTypeDisplayName": "Helmet",
+    "classType": 1,
+    "flavorText": "We strive to know infinity, and sharpen our minds on the whetstone of the impossible.",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 22,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 4,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 5,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": -4,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 4,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 4,
+        "maximum": 30
+      }
+    ],
+    "perks": [
+      {
+        "hash": 3723531833,
+        "name": "Burning Souls",
+        "slot": "Intrinsic",
+        "description": "Activating your class ability grants Cure. Rapid [Solar]Solar final blows grant stacks of Burning Souls that increase Solar ability damage, increase the potency of Dodge's healing, and spreads the healing to nearby allies.",
+        "icon": "/common/destiny2_content/icons/16f43c6fbb972bdc24764a59aacc8161.png",
+        "isExotic": true
+      }
+    ]
+  },
+  "3793245444": {
+    "hash": 3793245444,
+    "name": "Renewal Grasps",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/4943351eeea32eacd98c50e33c840416.jpg",
+    "rarity": "Exotic",
+    "itemType": 2,
+    "itemSubType": 27,
+    "itemTypeDisplayName": "Gauntlets",
+    "classType": 1,
+    "flavorText": "The frigid will renewed, resurgent.",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 12,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 6,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 4,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": -1,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 3,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": -3,
+        "maximum": 30
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1457189155,
+        "name": "Depths of Duskfield",
+        "slot": "Intrinsic",
+        "description": "Your Duskfield grenades have a much larger effect radius. Allies inside the Duskfield gain Frost Armor and targets inside the area deal reduced damage.",
+        "icon": "/common/destiny2_content/icons/47fd782cc9b993709e25ca66035d13b8.png",
+        "isExotic": true
+      }
+    ]
+  },
+  "3853748946": {
+    "hash": 3853748946,
+    "name": "Enhancement Core",
+    "description": "Required for purchasing Upgrade Modules and forging Masterwork gear. Chance to obtain from Legendary gear, some activities, and bounties, or purchasable from the Cryptarch in the Tower.",
+    "icon": "/common/destiny2_content/icons/0a4eb695ed55b4e720ddc401460cc0f9.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Material",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "3950721485": {
+    "hash": 3950721485,
+    "name": "PvE Threader",
+    "description": "Obtain an Armor Synthesis bounty with a randomly selected PvE objective.\n\nYou can complete {var:95519481} Armor Synthesis bounties for each class.",
+    "icon": "/common/destiny2_content/icons/56e8847f7f452fa6db9342ec6c3bae5b.png",
+    "rarity": "Legendary",
+    "itemType": 20,
+    "itemSubType": 32,
+    "itemTypeDisplayName": "Armor Synthesis Bounty",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  },
+  "3967899461": {
+    "hash": 3967899461,
+    "name": "Frumious Grips",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/0d8f33943c38765e2d777605feae001f.jpg",
+    "rarity": "Legendary",
+    "itemType": 2,
+    "itemSubType": 27,
+    "itemTypeDisplayName": "Gauntlets",
+    "classType": 1,
+    "flavorText": "It makes perfect sense to you. And that's all that matters.",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 11,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 4,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 9,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": -4,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 3,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": -3,
+        "maximum": 30
+      }
+    ],
+    "perks": []
+  },
+  "3998696856": {
+    "hash": 3998696856,
+    "name": "The Forward Path",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/6539d2503c231065fb6da05676084fd7.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 6,
+    "itemTypeDisplayName": "Auto Rifle",
+    "classType": 3,
+    "flavorText": "Forged in honor of Weyloran, and roads yet traveled.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 21,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 45,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 42,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 69,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 60,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 71,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 3989629871,
+        "name": "Skulking Wolf",
+        "slot": "Origin Trait",
+        "description": "While at low health, final blows with this weapon grant enhanced radar, remove you from opposing Guardians' radar, and make combatants less aggressive toward you.",
+        "icon": "/common/destiny2_content/icons/451e0f091bd3e7245a82e4efc01ad8c3.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "4157369212": {
+    "hash": 4157369212,
+    "name": "Wishful Ignorance",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/e276ddbfe120ed49c38f24a5390143e1.jpg",
+    "rarity": "Exotic",
+    "itemType": 2,
+    "itemSubType": 27,
+    "itemTypeDisplayName": "Gauntlets",
+    "classType": 0,
+    "flavorText": "\"My only wish is for this disrespect to end.\" — Ol-Amral",
+    "stats": [
+      {
+        "hash": 2996146975,
+        "name": "Mobility",
+        "value": 20,
+        "maximum": 30
+      },
+      {
+        "hash": 392767087,
+        "name": "Resilience",
+        "value": 7,
+        "maximum": 30
+      },
+      {
+        "hash": 1943323491,
+        "name": "Recovery",
+        "value": 5,
+        "maximum": 30
+      },
+      {
+        "hash": 1735777505,
+        "name": "Discipline",
+        "value": 6,
+        "maximum": 30
+      },
+      {
+        "hash": 144602215,
+        "name": "Intellect",
+        "value": 6,
+        "maximum": 30
+      },
+      {
+        "hash": 4244567218,
+        "name": "Strength",
+        "value": 7,
+        "maximum": 30
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1358612221,
+        "name": "Wish-Dragon's Talons",
+        "slot": "Intrinsic",
+        "description": "Gain an additional Frenzied Blade charge. Frenzied Blade and Flechette Storm briefly increase their damage with each strike. Pulses from your Banner of War return melee energy based on the number of allies healed.",
+        "icon": "/common/destiny2_content/icons/5a233a91d9d5ee5b1ca6851bb8dbedf8.png",
+        "isExotic": true
+      }
+    ]
+  },
+  "4248774254": {
+    "hash": 4248774254,
+    "name": "The Summoner",
+    "description": "",
+    "icon": "/common/destiny2_content/icons/8b7b857eac83b6c2db578c3c342ac685.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 6,
+    "itemTypeDisplayName": "Auto Rifle",
+    "classType": 3,
+    "flavorText": "Join the dance of fire and birth.",
+    "rollType": "random",
+    "stats": [
+      {
+        "hash": 4043523819,
+        "name": "Impact",
+        "value": 21,
+        "maximum": 100
+      },
+      {
+        "hash": 1240592695,
+        "name": "Range",
+        "value": 40,
+        "maximum": 100
+      },
+      {
+        "hash": 155624089,
+        "name": "Stability",
+        "value": 41,
+        "maximum": 100
+      },
+      {
+        "hash": 943549884,
+        "name": "Handling",
+        "value": 70,
+        "maximum": 100
+      },
+      {
+        "hash": 4188031367,
+        "name": "Reload Speed",
+        "value": 56,
+        "maximum": 100
+      },
+      {
+        "hash": 1345609583,
+        "name": "Aim Assistance",
+        "value": 62,
+        "maximum": 100
+      }
+    ],
+    "perks": [
+      {
+        "hash": 1294026524,
+        "name": "Adaptive Frame",
+        "slot": "Intrinsic",
+        "description": "A well-rounded grip, reliable and sturdy.",
+        "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+        "isExotic": true
+      },
+      {
+        "hash": 29505215,
+        "name": "Random Roll on Purchase",
+        "slot": "Vendor Roll",
+        "description": "Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.",
+        "icon": "/common/destiny2_content/icons/ef1a8374c931321694d6d3d0d3e96247.png",
+        "isExotic": false
+      },
+      {
+        "hash": 65797256,
+        "name": "Fleet Footed",
+        "slot": "Origin Trait",
+        "description": "Dealing damage grants you a short window of increased movement speed and airborne effectiveness. Landing a final blow increases these effects.",
+        "icon": "/common/destiny2_content/icons/d89f88c83b11459a6804958b98353387.png",
+        "isExotic": false
+      }
+    ]
+  },
+  "4257549984": {
+    "hash": 4257549984,
+    "name": "Enhancement Prism",
+    "description": "Required for forging Masterwork gear. Obtained from challenging activities or purchasable from the Cryptarch in the Tower.",
+    "icon": "/common/destiny2_content/icons/dea2a35badf7466d4c2c2697ce6e8d87.jpg",
+    "rarity": "Legendary",
+    "itemType": 0,
+    "itemSubType": 0,
+    "itemTypeDisplayName": "Material",
+    "classType": 3,
+    "flavorText": "",
+    "stats": [],
+    "perks": []
+  }
+}

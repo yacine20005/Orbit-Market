@@ -41,26 +41,18 @@ async def get_xur_inventory():
     vendors = response.get('vendors', {}).get('data', {})
     bungie_has_xur = XUR_VENDOR_HASH in vendors
 
-    # Check if Xûr should be available based on schedule (Paris time)
-    from datetime import datetime, timezone, timedelta
-    
-    # Paris timezone (UTC+1 or UTC+2 depending on daylight saving)
-    # For simplicity, assuming UTC+2 (summer time)
-    paris_offset = timedelta(hours=2)
-    paris_tz = timezone(paris_offset)
-    now_paris = datetime.now(paris_tz)
-    current_day = now_paris.weekday()  # 0 = Monday, 1 = Tuesday, ..., 4 = Friday, 5 = Saturday, 6 = Sunday
-    current_hour = now_paris.hour
-    
-    # Xûr is available from Friday 18h to Tuesday 18h (Paris time)
-    # Friday = 4, Saturday = 5, Sunday = 6, Monday = 0, Tuesday = 1
-    is_xur_scheduled = False
-    if current_day == 4 and current_hour >= 18:  # Friday after 18h
-        is_xur_scheduled = True
-    elif current_day in [5, 6, 0]:  # Saturday, Sunday, Monday
-        is_xur_scheduled = True
-    elif current_day == 1 and current_hour < 18:  # Tuesday before 18h
-        is_xur_scheduled = True
+    # Check if Xûr should be available based on Bungie global UTC schedule (Friday 17:00 UTC to Tuesday 17:00 UTC)
+    from datetime import datetime, timezone
+
+    now_utc = datetime.now(timezone.utc)
+    current_day = now_utc.weekday()  # 0 = Monday, 1 = Tuesday, ..., 4 = Friday, 5 = Saturday, 6 = Sunday
+    current_hour = now_utc.hour
+
+    is_xur_scheduled = (
+        (current_day == 4 and current_hour >= 17)
+        or current_day in (5, 6, 0)
+        or (current_day == 1 and current_hour < 17)
+    )
     
     # Use schedule-based availability (more reliable than Bungie API vendor list)
     is_xur_currently_available = is_xur_scheduled

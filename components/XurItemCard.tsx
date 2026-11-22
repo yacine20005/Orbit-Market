@@ -1,443 +1,421 @@
-import React from "react";
-import { StyleSheet, TouchableOpacity, Image, Dimensions } from "react-native";
-import { Text, View } from "./Themed";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import Colors from "@/constants/Colors";
+import React from 'react';
+import {
+  StyleSheet,
+  Pressable,
+  Image,
+  View,
+  Text,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Colors, { getCurrencyName } from '@/constants/Colors';
+import { XurInventoryItem } from '@/services/api';
+import { SegmentedStatBar } from './MarathonPrimitives';
 
-const { width: screenWidth } = Dimensions.get("window");
+const M = Colors.marathon;
 
 interface XurItemCardProps {
-  item: {
-    itemName: string;
-    itemDescription: string;
-    itemIcon: string;
-    rarity: string;
-    costs: Array<{
-      itemHash: number;
-      quantity: number;
-      hasConditionalVisibility: boolean;
-    }>;
-    itemHash: number;
-    vendorItemIndex: number;
-    quantity: number;
-    classType?: number;
-    supportedClasses?: string[];
-    perks?: Array<{
-      hash: number;
-      name: string;
-      description: string;
-      icon: string;
-      isExotic?: boolean;
-    }>;
-  };
+  item: XurInventoryItem;
+  expanded?: boolean;
   onPress: () => void;
 }
 
-const getRarityColor = (rarity: string) => {
-  switch (rarity.toLowerCase()) {
-    case "exotic":
-      return Colors.destiny.exotic;
-    case "legendary":
-      return "#522F9A";
-    case "rare":
-      return "#5076A3";
-    case "uncommon":
-      return "#366F3F";
-    case "common":
-      return "#C3BCDB";
-    default:
-      return Colors.destiny.primary;
-  }
+const getMetaLabel = (item: XurInventoryItem): string => {
+  if (item.rollType === 'curated') return 'Curated Perks';
+  if (item.rollType === 'random') return 'Random Roll';
+  if (item.classType === 0) return 'Titan';
+  if (item.classType === 1) return 'Hunter';
+  if (item.classType === 2) return 'Warlock';
+  return item.rarity;
 };
 
-const getCurrencyName = (itemHash: number) => {
-  switch (itemHash) {
-    case 800069450:
-      return "Strange Coins";
-    case 2817410917:
-      return "Glimmer";
-    default:
-      return "Unknown";
+const getPerkPreviewLine = (item: XurInventoryItem): string | null => {
+  if (!item.perks || item.perks.length === 0) {
+    return item.itemDescription || null;
   }
+
+  if (item.rollType === 'curated') {
+    const traits = item.perks.filter(
+      (p) => p.slot === 'Trait' || p.slot === 'Origin Trait'
+    );
+    if (traits.length > 0) {
+      return `Perks: ${traits.map((t) => t.name).join(' · ')}`;
+    }
+    return `Perks: ${item.perks.map((p) => p.name).join(' · ')}`;
+  }
+
+  if (item.rollType === 'random') {
+    const frame = item.perks.find((p) => p.slot === 'Intrinsic');
+    const origin = item.perks.find((p) => p.slot === 'Origin Trait');
+    const parts = ['Random traits on purchase'];
+    if (frame) parts.push(frame.name);
+    if (origin) parts.push(origin.name);
+    return parts.join(' · ');
+  }
+
+  const primary = item.perks[0];
+  return primary.description
+    ? `${primary.name} — ${primary.description}`
+    : primary.name;
 };
 
-const getCurrencyIcon = (itemHash: number) => {
-  switch (itemHash) {
-    case 800069450:
-      return "currency-usd";
-    case 2817410917:
-      return "triangle";
-    default:
-      return "help-circle";
-  }
-};
+export default function XurItemCard({
+  item,
+  expanded = false,
+  onPress,
+}: XurItemCardProps) {
+  const isExotic = item.rarity === 'Exotic';
+  const metaLabel = getMetaLabel(item);
+  const previewLine = getPerkPreviewLine(item);
 
-const getClassIcon = (className: string) => {
-  switch (className.toLowerCase()) {
-    case "titan":
-      return "shield";
-    case "hunter":
-      return "target";
-    case "warlock":
-      return "creation";
-    default:
-      return "help-circle";
-  }
-};
+  const imageUri = item.itemIcon.startsWith('http')
+    ? item.itemIcon
+    : `https://www.bungie.net${item.itemIcon}`;
 
-const getClassColor = (className: string) => {
-  switch (className.toLowerCase()) {
-    case "titan":
-      return "#FF6B35"; // Orange for Titan
-    case "hunter":
-      return "#00D4FF"; // Blue for Hunter
-    case "warlock":
-      return "#9333EA"; // Purple for Warlock
-    default:
-      return Colors.destiny.ghost;
-  }
-};
-
-export default function XurItemCard({ item, onPress }: XurItemCardProps) {
-  const rarityColor = getRarityColor(item.rarity);
-  const imageUri = `https://www.bungie.net${item.itemIcon}`;
-  const isSpecialOffer =
-    item.itemName.includes("Strange") || item.costs.length === 0;
+  const primaryCost = item.costs && item.costs.length > 0 ? item.costs[0] : null;
+  const hasStats = Boolean(item.stats && item.stats.length > 0);
+  const isArmorStats =
+    hasStats && item.stats?.some((s) => s.name === 'Resilience' || s.name === 'Mobility');
+  const totalArmorStat = isArmorStats
+    ? item.stats!.reduce((sum, s) => sum + s.value, 0)
+    : 0;
 
   return (
-    <TouchableOpacity
-      style={styles.container}
+    <Pressable
+      style={({ pressed }) => [
+        styles.card,
+        expanded && styles.cardExpanded,
+        pressed && { opacity: 0.92 },
+      ]}
       onPress={onPress}
-      activeOpacity={0.8}
     >
-      <View style={[styles.cardGradient, { borderColor: `${rarityColor}30` }]}>
-        {/* Item Image */}
-        <View style={[styles.imageContainer, { borderColor: rarityColor }]}>
-          <Image
-            source={{ uri: imageUri }}
-            style={styles.itemImage}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={[`${rarityColor}00`, `${rarityColor}20`]}
-            style={styles.imageOverlay}
-          />
+      {/* Main Row: Icon + Info + Price/Chevron */}
+      <View style={styles.mainRow}>
+        <View
+          style={[
+            styles.iconWrap,
+            { borderColor: isExotic ? M.amber : M.borderActive },
+          ]}
+        >
+          <Image source={{ uri: imageUri }} style={styles.itemIcon} />
         </View>
 
-        {/* Item Info */}
-        <View style={styles.itemInfo}>
-          <View style={styles.itemHeader}>
-            <Text
-              style={[styles.itemName, { color: rarityColor }]}
-              numberOfLines={2}
-            >
-              {item.itemName}
+        <View style={styles.infoCol}>
+          <Text style={styles.itemName} numberOfLines={expanded ? 2 : 1}>
+            {item.itemName}
+          </Text>
+
+          <View style={styles.metaRow}>
+            <Text style={styles.typeText}>
+              {item.itemTypeDisplayName || item.rarity}
             </Text>
-            <View style={styles.badgeContainer}>
-              <View
-                style={[
-                  styles.rarityBadge,
-                  { backgroundColor: `${rarityColor}20` },
-                ]}
-              >
-                <Text style={[styles.rarityText, { color: rarityColor }]}>
-                  {item.rarity}
-                </Text>
-              </View>
-            </View>
+            {metaLabel && metaLabel !== item.itemTypeDisplayName ? (
+              <>
+                <Text style={styles.dotSeparator}>·</Text>
+                <Text style={styles.metaTagText}>{metaLabel}</Text>
+              </>
+            ) : null}
           </View>
 
-          {/* Exotic Perk Preview */}
-          {item.perks &&
-            item.perks.length > 0 &&
-            item.rarity.toLowerCase() === "exotic" && (
-              <View style={styles.exoticPerkPreview}>
-                {item.perks
-                  .filter((perk) => perk.isExotic)
-                  .map((perk, index) => (
-                    <View key={index} style={styles.exoticPerkInfo}>
-                      <Text style={styles.exoticPerkName} numberOfLines={1}>
-                        ⚡ {perk.name}
-                      </Text>
-                    </View>
-                  ))}
-              </View>
-            )}
-
-          {/* Classes supportées */}
-          {item.supportedClasses && item.supportedClasses.length > 0 && (
-            <View style={styles.classesContainer}>
-              <Text style={styles.classesLabel}>Available for:</Text>
-              <View style={styles.classBadges}>
-                {item.supportedClasses.map((className, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.classBadge,
-                      { backgroundColor: `${getClassColor(className)}20` },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={getClassIcon(className)}
-                      size={12}
-                      color={getClassColor(className)}
-                    />
-                    <Text
-                      style={[
-                        styles.classText,
-                        { color: getClassColor(className) },
-                      ]}
-                    >
-                      {className}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {item.itemDescription && (
-            <Text style={styles.itemDescription} numberOfLines={2}>
-              {item.itemDescription}
+          {!expanded && previewLine ? (
+            <Text style={styles.perkPreview} numberOfLines={1}>
+              {previewLine}
             </Text>
-          )}
-
-          {/* Price */}
-          <View style={styles.priceSection}>
-            {item.costs.length > 0 ? (
-              <View style={styles.priceContainer}>
-                <MaterialCommunityIcons
-                  name={getCurrencyIcon(item.costs[0].itemHash)}
-                  size={16}
-                  color={Colors.destiny.accent}
-                />
-                <Text style={styles.priceText}>
-                  {item.costs[0].quantity}{" "}
-                  {getCurrencyName(item.costs[0].itemHash)}
-                </Text>
-              </View>
-            ) : (
-              <Text style={styles.freeText}>FREE</Text>
-            )}
-
-            {isSpecialOffer && (
-              <View style={styles.specialBadge}>
-                <MaterialCommunityIcons
-                  name="star"
-                  size={12}
-                  color={Colors.destiny.exotic}
-                />
-                <Text style={styles.specialText}>SPECIAL</Text>
-              </View>
-            )}
-          </View>
+          ) : null}
         </View>
 
-        {/* Tap indicator */}
-        <View style={styles.tapIndicator}>
+        <View style={styles.rightCol}>
+          {primaryCost && primaryCost.quantity > 0 ? (
+            <View style={styles.costBox}>
+              <Text style={styles.costAmount}>
+                {primaryCost.quantity >= 1000
+                  ? `${Math.round(primaryCost.quantity / 1000)}k`
+                  : primaryCost.quantity}
+              </Text>
+              <Text style={styles.costUnit}>
+                {getCurrencyName(primaryCost.itemHash)}
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.freeTag}>Quest</Text>
+          )}
           <MaterialCommunityIcons
-            name="chevron-right"
+            name={expanded ? 'chevron-up' : 'chevron-down'}
             size={20}
-            color={Colors.destiny.ghost}
-            style={{ opacity: 0.5 }}
+            color={expanded ? M.bone : M.ash}
           />
         </View>
       </View>
-    </TouchableOpacity>
+
+      {/* Inline Expanded Details: Perks / Description / Stats / Lore */}
+      {expanded && (
+        <View style={styles.expandedSection}>
+          {/* Item Description (for Bounties, Engrams, Passages, Materials, Shaders) */}
+          {item.itemDescription ? (
+            <Text style={styles.itemFullDesc}>{item.itemDescription}</Text>
+          ) : null}
+
+          {/* Perks & Weapon Rolls */}
+          {item.perks && item.perks.length > 0 ? (
+            <View style={styles.perkList}>
+              <Text style={styles.sectionHeading}>
+                {item.rollType === 'curated'
+                  ? 'Predefined Weapon Roll'
+                  : item.rollType === 'random'
+                  ? 'Weapon Frame & Roll Info'
+                  : 'Intrinsic Traits'}
+              </Text>
+              {item.perks.map((perk, idx) => {
+                const perkIconUri = perk.icon
+                  ? perk.icon.startsWith('http')
+                    ? perk.icon
+                    : `https://www.bungie.net${perk.icon}`
+                  : null;
+                return (
+                  <View
+                    key={`${perk.hash}-${idx}`}
+                    style={styles.perkDetailRow}
+                  >
+                    {perkIconUri ? (
+                      <Image
+                        source={{ uri: perkIconUri }}
+                        style={styles.perkIcon}
+                      />
+                    ) : null}
+                    <View style={styles.perkDetailTextCol}>
+                      <View style={styles.perkTitleLine}>
+                        <Text style={styles.perkDetailTitle}>{perk.name}</Text>
+                        {perk.slot ? (
+                          <Text style={styles.perkSlotLabel}>{perk.slot}</Text>
+                        ) : null}
+                      </View>
+                      {perk.description ? (
+                        <Text style={styles.perkDetailDesc}>
+                          {perk.description}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ) : null}
+
+          {/* Segmented Stats (Strictly Weapons & Armor only) */}
+          {hasStats && (
+            <View style={styles.statsContainer}>
+              <View style={styles.statsHeaderRow}>
+                <Text style={styles.sectionHeading}>
+                  {isArmorStats ? 'Armor Attributes' : 'Weapon Stats'}
+                </Text>
+                {totalArmorStat > 0 ? (
+                  <Text style={styles.totalStatText}>
+                    Total {totalArmorStat}
+                  </Text>
+                ) : null}
+              </View>
+              {item.stats!.map((stat) => (
+                <SegmentedStatBar
+                  key={stat.hash}
+                  label={stat.name}
+                  value={stat.value}
+                  max={stat.maximum || 100}
+                  segments={15}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Lore / Flavor Text */}
+          {item.flavorText ? (
+            <Text style={styles.flavorText}>"{item.flavorText}"</Text>
+          ) : null}
+        </View>
+      )}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-    marginHorizontal: 4,
-  },
-  cardGradient: {
-    flexDirection: "row",
-    padding: 16,
-    borderRadius: 16,
+  card: {
+    backgroundColor: M.surface,
     borderWidth: 1,
-    backgroundColor: "rgba(15, 11, 31, 1)",
-    // Shadow for iOS
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 3.84,
-    // Elevation for Android
-    elevation: 3,
+    borderColor: M.border,
+    borderRadius: 6,
+    marginBottom: 10,
+    padding: 14,
   },
-  imageContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 12,
-    borderWidth: 2,
-    overflow: "hidden",
-    position: "relative",
+  cardExpanded: {
+    borderColor: M.borderActive,
+    backgroundColor: M.surfaceElevated,
   },
-  itemImage: {
-    width: "100%",
-    height: "100%",
+  mainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  imageOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  iconWrap: {
+    width: 54,
+    height: 54,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+    backgroundColor: M.void,
   },
-  itemInfo: {
+  itemIcon: {
+    width: '100%',
+    height: '100%',
+  },
+  infoCol: {
     flex: 1,
-    marginLeft: 16,
-    justifyContent: "space-between",
-    backgroundColor: "rgba(15, 11, 31, 1)",
-  },
-  itemHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 4,
-    backgroundColor: "transparent",
+    justifyContent: 'center',
   },
   itemName: {
-    flex: 1,
     fontSize: 16,
-    fontWeight: "bold",
-    marginRight: 8,
+    fontWeight: '700',
+    color: M.bone,
+    letterSpacing: -0.2,
+    lineHeight: 21,
   },
-  badgeContainer: {
-    alignItems: "flex-end",
-    backgroundColor: "transparent",
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    gap: 6,
   },
-  rarityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+  typeText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: M.inkSecondary,
   },
-  rarityText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  dotSeparator: {
+    color: M.ash,
+    fontSize: 13,
   },
-  classesContainer: {
-    marginBottom: 8,
-    backgroundColor: "transparent",
+  metaTagText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: M.ash,
   },
-  classesLabel: {
+  perkPreview: {
+    marginTop: 4,
+    fontSize: 13,
+    color: M.ash,
+    lineHeight: 18,
+  },
+  rightCol: {
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 6,
+    minWidth: 64,
+  },
+  costBox: {
+    alignItems: 'flex-end',
+  },
+  costAmount: {
+    fontFamily: 'SpaceMono',
+    fontSize: 15,
+    fontWeight: '700',
+    color: M.bone,
+  },
+  costUnit: {
     fontSize: 11,
-    color: Colors.destiny.ghost,
-    opacity: 0.7,
+    color: M.ash,
+    fontWeight: '500',
+  },
+  freeTag: {
+    fontSize: 12,
+    color: M.ash,
+    fontWeight: '600',
+  },
+  expandedSection: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: M.border,
+    gap: 14,
+  },
+  sectionHeading: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: M.ash,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 8,
+  },
+  perkList: {
+    gap: 8,
+  },
+  perkDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: M.void,
+    padding: 12,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: M.border,
+  },
+  perkIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  perkDetailTextCol: {
+    flex: 1,
+  },
+  perkTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 3,
+  },
+  perkDetailTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: M.bone,
+    flex: 1,
+  },
+  perkSlotLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: M.ash,
+  },
+  perkDetailDesc: {
+    fontSize: 13,
+    color: M.inkSecondary,
+    lineHeight: 19,
+  },
+  itemFullDesc: {
+    fontSize: 14,
+    color: M.inkSecondary,
+    lineHeight: 20,
+  },
+  statsContainer: {
+    backgroundColor: M.void,
+    padding: 12,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: M.border,
+  },
+  statsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
-  classBadges: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-    backgroundColor: "transparent",
-  },
-  classBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginRight: 4,
-    marginBottom: 2,
-  },
-  classText: {
-    fontSize: 9,
-    fontWeight: "bold",
-    marginLeft: 2,
-    textTransform: "uppercase",
-  },
-  itemDescription: {
+  totalStatText: {
+    fontFamily: 'SpaceMono',
     fontSize: 12,
-    color: Colors.destiny.ghost,
-    opacity: 0.7,
+    fontWeight: '700',
+    color: M.bone,
     marginBottom: 8,
-    lineHeight: 16,
   },
-  priceSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
-  priceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
-  priceText: {
-    fontSize: 14,
-    color: Colors.destiny.ghost,
-    fontWeight: "600",
-    marginLeft: 4,
-  },
-  freeText: {
-    fontSize: 14,
-    color: Colors.destiny.primary,
-    fontWeight: "600",
-  },
-  specialBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: `${Colors.destiny.exotic}20`,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  specialText: {
-    fontSize: 10,
-    color: Colors.destiny.exotic,
-    fontWeight: "bold",
-    marginLeft: 2,
-    letterSpacing: 0.5,
-  },
-  tapIndicator: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
-  exoticPerkPreview: {
-    backgroundColor: `${Colors.destiny.exotic}08`,
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.destiny.exotic,
-  },
-  exoticPerkHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-    backgroundColor: "transparent",
-    gap: 4,
-  },
-  exoticPerkLabel: {
-    fontSize: 10,
-    color: Colors.destiny.exotic,
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  exoticPerkInfo: {
-    backgroundColor: "transparent",
-  },
-  exoticPerkName: {
-    fontSize: 12,
-    color: Colors.destiny.exotic,
-    fontWeight: "bold",
-    marginBottom: 2,
-  },
-  exoticPerkDescription: {
-    fontSize: 10,
-    color: Colors.destiny.ghost,
-    opacity: 0.8,
-    lineHeight: 14,
+  flavorText: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    color: M.ash,
+    lineHeight: 19,
   },
 });

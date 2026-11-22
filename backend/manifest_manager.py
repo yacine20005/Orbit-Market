@@ -50,6 +50,25 @@ async def get_manifest_metadata():
         logger.error(error_msg, exc)
         return None
 
+def _extract_manifest_zip(zip_path: Path, dest_path: Path) -> None:
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        content_filename = next(
+            (name for name in zip_ref.namelist() if name.endswith('.content')),
+            None
+        )
+        if not content_filename:
+            raise FileNotFoundError("Impossible de trouver le fichier .content dans l'archive zip du manifest.")
+
+        zip_ref.extract(content_filename, path=MANIFEST_DIRECTORY)
+
+        extracted_file = MANIFEST_DIRECTORY / content_filename
+        if dest_path.exists():
+            os.remove(dest_path)
+        extracted_file.rename(dest_path)
+
+    os.remove(zip_path)
+
+
 async def download_and_unzip_manifest(url: str, dest_path: Path):
     """
     Downloads a file from a URL, unzips it, finds the .content file,
@@ -62,26 +81,10 @@ async def download_and_unzip_manifest(url: str, dest_path: Path):
             response.raise_for_status()
 
         zip_path = MANIFEST_DIRECTORY / "manifest.zip"
-        zip_path.write_bytes(response.content)
+        await asyncio.to_thread(zip_path.write_bytes, response.content)
         logger.info("✅ Téléchargement terminé (%d bytes). Extraction en cours...", len(response.content))
 
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            # Find the .content file name inside the zip archive
-            content_filename = next(
-                (name for name in zip_ref.namelist() if name.endswith('.content')),
-                None
-            )
-            if not content_filename:
-                raise FileNotFoundError("Impossible de trouver le fichier .content dans l'archive zip du manifest.")
-
-            zip_ref.extract(content_filename, path=MANIFEST_DIRECTORY)
-
-            extracted_file = MANIFEST_DIRECTORY / content_filename
-            if dest_path.exists():
-                os.remove(dest_path)
-            extracted_file.rename(dest_path)
-
-        os.remove(zip_path)
+        await asyncio.to_thread(_extract_manifest_zip, zip_path, dest_path)
         logger.info("✅ Manifest extrait avec succès vers: %s", dest_path)
 
     except httpx.RequestError as exc:

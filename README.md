@@ -1,129 +1,124 @@
-# Orbit Market - Multi-Game Vendor & World State Tracker 🌌
+# ORBIT MARKET // UESC TELEMETRY TERMINAL (v2.0.0)
 
-## Your Ultimate Hub for Destiny 2 & Warframe Live Data
+> **Tactical Multi-Game Vendor & WorldState Companion for Destiny 2 and Warframe**  
+> Designed in the **Graphic Realism / Cyber-Brutalist** art direction inspired by Bungie's ***Marathon* (2025)**.
 
-----
+---
 
-## About the Project
+## 01 // OVERVIEW
 
-**Orbit Market** is a **cross-platform mobile application** that serves as your ultimate companion for **Destiny 2** and **Warframe**. Built with **Expo (React Native)** for the frontend and **FastAPI (Python)** for the backend, this application provides real-time access to vendor inventories, world states, and essential game information across both games.
+**Orbit Market** is a standalone cross-platform companion app (**Android APK**, **iOS**, **Web**) built with **Expo SDK 53 / React Native 0.79 (TypeScript)** and an optional **FastAPI (Python)** backend. It unifies real-time vendor inventories, exotic roll telemetry, and open-world cycle tracking for **Destiny 2** and **Warframe** inside a cohesive, zero-bloat industrial terminal interface.
 
-### **Current Features (Destiny 2):**
+### Architectural Highlights for Recruiters & Engineers
+- **100% Autonomous Client Mode**: Queries the **Bungie.net Platform API** (`/Destiny2/Vendors/?components=400,402`) and **WarframeStat.us WorldState API** (`https://api.warframestat.us/pc`) directly from the mobile device—requiring **zero backend server maintenance** to run in production.
+- **Embedded Manifest Snapshot + Live Fallback**: Ships with a pre-indexed Destiny 2 Manifest dictionary (`constants/ManifestSnapshot.json`) of Exotic weapons, armor, perks, and vendor pools for **0ms item resolution**, automatically falling back to live `DestinyInventoryItemDefinition` lookups and resilient offline snapshots when upstream APIs are undergoing maintenance.
+- **Graphic Realism UI System**: Built from custom *Marathon*-inspired primitives (`components/MarathonPrimitives.tsx`)—1px exposed structural hairlines, corner registration marks, dot-matrix pixel indicators, hazard stripes, and tabular `SpaceMono` telemetry counters.
 
-- **Xûr Inventory Tracker** - Fully functional and live!
-- **All Destiny 2 Vendors** - Coming soon!
+---
 
-### **Upcoming Features (Warframe):**
+## 02 // FEATURES
 
-- **World State Information** - Real-time Warframe world data
-- **Market Data & More** - Comprehensive Warframe ecosystem tracking
+### DESTINY 2 // VENDOR ARMORY (`app/(tabs)/xur.tsx`)
+- **5 Playable Vendor Channels**:
+  - **Xûr, Agent of the Nine** (`2190858386`) — Live public sales (`components=400,402`), exotic weapon & armor rolls, Strange Coin costs, and live arrival/departure countdown.
+  - **Banshee-44, Tower Gunsmith** (`672118013`) — Featured Foundry & Masterwork Weapons.
+  - **Ada-1, Armor Synthesis** (`350061650`) — Synthweave Bounties & Legacy Raid Shaders.
+  - **Saint-14, Trials of Osiris** (`765357505`) — Adept Weapons & Flawless Osirian Gear.
+  - **Valus Saladin, Iron Banner** (`895295461`) — Iron Lord Armory & Multimach/Tusk Weapons.
+- **Tactical Item Inspection Modal (`components/XurItemModal.tsx`)**:
+  - Full ballistic/armor stat telemetry with segmented 20-cell bars (`SegmentedStatBar`).
+  - Socketed Exotic Trait & Intrinsic Perk breakdown with live Bungie icon badges.
+  - Class filter (`ALL`, `HUNTER`, `TITAN`, `WARLOCK`).
 
-----
+### WARFRAME // ORIGIN SYSTEM TELEMETRY (`app/(tabs)/warframe.tsx`)
+- **5 Live Open-World Synchronizers** (with 1Hz real-time countdowns):
+  - **Plains of Eidolon (Cetus)** — Day / Night cycle.
+  - **Orb Vallis (Venus)** — Warm / Cold cycle.
+  - **Cambion Drift (Deimos)** — Fass / Vome cycle.
+  - **Zariman Ten Zero** — Corpus / Grineer occupation cycle.
+  - **Duviri Paradox** — Joy / Anger / Envy / Sorrow / Fear spiral + active Warframe circuit choices.
+- **Baro Ki'Teer // Void Trader**:
+  - Live arrival/departure countdown, relay node location, and full Ducat + Credit inventory manifest.
+- **Void Fissures, Invasions & Tactical Alerts**:
+  - Active Lith / Meso / Neo / Axi / Omnia Void Fissures, faction Invasions with progress bars, Daily Sortie boss/modifier brief, Weekly Archon Hunt, and Nightwave acts.
 
-## Current Features
+---
 
-### **Destiny 2 - Xûr Tracker (Live!)**
+## 03 // ART DIRECTION & DESIGN SYSTEM (`DESIGN.md`)
 
-- **Real-time Xur Inventory:** See what Xûr is offering right now
-- **Detailed Item Information:** View names, icons, and base stats for all items
-- **"Roll" Decryption:** Understand the specific perks and stats on weapons and armor
-- **Cost Breakdown:** Easily see the materials and currency required for each purchase
-- **Automatic Data Refresh:** Xur's inventory updates automatically with his weekly arrival
+Inspired by Joseph Cross's **Graphic Realism** art direction for Bungie's ***Marathon* (2025)**:
 
-### **Coming Soon**
+| Token | Hex | Role |
+| :--- | :--- | :--- |
+| `void` | `#060608` | Primary OLED carbon canvas |
+| `surface` | `#0D0E12` | Exposed 1px modular grid cells |
+| `bone` | `#F2F0E8` | High-contrast silkscreen primary typography |
+| `acid` | `#C8FF00` | UESC primary active state & live telemetry |
+| `vermilion` | `#FF3B00` | Alert state, Solar/Fass cycle, critical timers |
+| `cyan` | `#00F0FF` | Biometric cold state, Vallis Cold, Void Trader |
+| `amber` | `#FFB800` | Destiny 2 Exotic tier & Ducat currency |
 
-- **All Destiny 2 Vendors:** Ada-1, Banshee-44, Saint-14, and more!
-- **Warframe World State:** Invasions, Alerts, Sorties, Nightwave, and current events
-- **Cross-Game Dashboard:** Switch seamlessly between Destiny 2 and Warframe data
+See [`DESIGN.md`](./DESIGN.md) and [`PRODUCT.md`](./PRODUCT.md) for the complete specification.
 
-----
+---
 
-## Technologies Used
+## 04 // QUICK START & ANDROID APK BUILD
 
-### Frontend (Mobile Application)
+### Prerequisites
+- **Node.js 18+** & **npm**
+- *(For local Android APK compilation)* **OpenJDK 17** and **Android SDK Build-Tools 35.0.0**
 
-- **Expo / React Native:** For cross-platform mobile development (iOS and Android).
-- **React Navigation:** To manage intuitive app navigation.
+### 1. Install & Run Development Server
+```bash
+npm install
+npx expo start
+```
+- Press `w` to open in Web browser
+- Press `a` to open on Android Emulator / connected device
 
-### Backend (API)
+### 2. Automated Android APK Build & GitHub Releases (CI/CD)
 
-- **FastAPI (Python):** A modern, high-performance web framework for building the API
-- **Pydantic:** Used for powerful data validation and modeling within FastAPI
-- **SQLite:** Local database for storing Destiny 2 Manifest data
-- **External APIs Integration:**
-  - **Bungie.net API:** For Destiny 2 vendor and game data
-  - **Warframe WorldState API:** For real-time Warframe information
+Every push to `main` (or tag `v*`) automatically triggers the GitHub Actions pipeline ([`.github/workflows/release-apk.yml`](./.github/workflows/release-apk.yml)):
+1. Provisions **Node.js 20**, **Java 17 (Temurin)**, and the **Android SDK** on an Ubuntu runner.
+2. Runs TypeScript verification (`tsc --noEmit`) and `npx expo prebuild --platform android`.
+3. Compiles the standalone signed release APK (`./gradlew assembleRelease`).
+4. Publishes **`orbit-market-v2.0.0.apk`** directly to **GitHub Releases** (and as a downloadable workflow artifact).
 
-----
+#### Manual Alternative (Local or EAS Cloud)
+```bash
+# Local Gradle Release Build
+npm run build:apk
 
-## Project Vision & Goals
-
-This project represents an ambitious expansion from a single-game utility to a **comprehensive multi-game information hub**. My objectives include:
-
-1. **Multi-Game Architecture:** Design a scalable backend capable of handling multiple game APIs and data sources
-2. **Real-Time Data Processing:** Implement efficient systems for live data updates from both Destiny 2 and Warframe
-3. **Advanced Mobile Development:** Master complex state management across different game contexts and data types
-4. **API Design Excellence:** Create robust, well-documented APIs that can serve multiple frontend applications
-5. **Performance Optimization:** Handle large datasets (Destiny 2 Manifest) while maintaining fast response times
-6. **Portfolio Showcase:** Demonstrate full-stack capabilities and multi-platform integration skills
-
-### **Game Coverage Strategy**
-
-**Phase 1 (Current):** Destiny 2 Xûr - ✅ **LIVE**
-**Phase 2 (In Progress):** All Destiny 2 Vendors
-**Phase 3 (Planned):** Warframe World State Integration
-**Phase 4 (Future):** Enhanced Features & Additional Games
-
-----
-
-## Architecture Overview
-
-The application uses a **multi-game client-server architecture** designed for scalability and performance:
-
-```text
-+-------------------+           +-----------------------+           +-------------------------+
-|                   |           |                       |           |                         |
-|   Mobile App      |           |     Backend API       |           |     External APIs       |
-|   (Expo React     | <-------> |     (FastAPI)         | <-------> |                         |
-|    Native)        |           |                       |           |  • Bungie.net API      |
-|                   |           |                       |           |  • Warframe API         |
-+-------------------+           +-----------------------+           +-------------------------+
-        |                                   |                                   |
-        |  • Cross-game UI                  |  • Multi-game routing             |  • Real-time data
-        |  • State management               |  • Data processing                |  • Vendor inventories
-        |  • Real-time updates              |  • Manifest management            |  • World states
-        |                                   |                                   |
-        |                                   +-----------------------+
-        |                                               |
-        |                                   +-----------------------+
-        |                                   |  Local Databases       |
-        +-----------------------------------+  • Destiny 2 Manifest  |
-                                            |  • Cached Game Data    |
-                                            +-----------------------+
+# Expo Cloud Build (EAS)
+npm run build:apk:eas
 ```
 
-### **Key Architectural Decisions:**
+---
 
-- **Centralized Data Processing:** Heavy manifest operations handled server-side
-- **Optimized Mobile Performance:** Lightweight client with efficient data consumption
-- **Modular Game Integration:** Easy addition of new games and APIs
-- **Real-Time Sync:** Live updates for time-sensitive vendor rotations
+## 05 // PROJECT STRUCTURE
 
-----
-
-## Roadmap & Future Enhancements
-
-### **Immediate Goals**
-
-- **Complete Destiny 2 Vendor Coverage:** Ada-1, Banshee-44, Saint-14, Trials, Iron Banner
-- **Warframe Integration:** World State API implementation
-- **Enhanced UI/UX:** Game-specific themes and improved navigation
-
-### **Long-term Vision**
-
-- **Additional Games:** Potential expansion to other live-service games
-- **Community Features:** User favorites, notifications, sharing
-- **Advanced Analytics:** Vendor rotation patterns, price tracking
-- **Cloud Deployment:** Global accessibility and scalability 
-
-----
+```text
+Orbit-Market/
+├── app/
+│   ├── (tabs)/
+│   │   ├── index.tsx        # ORBIT // HUB (Cross-game executive telemetry)
+│   │   ├── xur.tsx          # DESTINY 2 (5-Vendor Armory & Exotic roll inspector)
+│   │   ├── warframe.tsx     # WARFRAME (5 Open-World cycles, Baro, Fissures, Sortie)
+│   │   └── settings.tsx     # SYSTEM (API key override, diagnostics, cache flush)
+│   ├── _layout.tsx          # Root dark theme & font hydration
+│   └── +html.tsx            # Web industrial scrollbar & selection styling
+├── components/
+│   ├── MarathonPrimitives.tsx # PixelDotMatrix, HazardStripeBar, TelemetryFrame, SegmentedStatBar
+│   ├── XurItemCard.tsx      # Tactical vendor item card with perk chips & stat preview
+│   └── XurItemModal.tsx     # Deep item telemetry sheet
+├── constants/
+│   ├── Colors.ts            # Marathon 2025 color tokens
+│   └── ManifestSnapshot.json # Pre-indexed Bungie Manifest definitions (48 items & perks)
+├── hooks/
+│   ├── useXur.ts            # Multi-vendor Destiny 2 state & 1Hz countdown hook
+│   └── useWarframe.ts       # Warframe WorldState & 1Hz cycle countdown hook
+├── services/
+│   ├── api.ts               # Autonomous Bungie.net Platform client + Manifest resolver
+│   └── warframe.ts          # Autonomous WarframeStat.us WorldState client
+└── backend/                 # Optional FastAPI server + SQLite Manifest decoder
+```

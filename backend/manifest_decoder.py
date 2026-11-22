@@ -16,6 +16,14 @@ class ManifestDecoder:
     # Rarity constants
     RARITY_EXOTIC = 6
 
+    ALLOWED_TABLES = {
+        "DestinyInventoryItemDefinition",
+        "DestinyStatDefinition",
+        "DestinySocketTypeDefinition",
+        "DestinyDamageTypeDefinition",
+        "DestinyVendorDefinition",
+    }
+
     def __init__(self):
         current_dir = os.path.dirname(__file__)
         self.db_path = os.path.join(current_dir, "manifest", "manifest.sqlite")
@@ -28,6 +36,8 @@ class ManifestDecoder:
 
     def get_definition(self, table_name: str, hash_id: int) -> Optional[Dict[str, Any]]:
         """Retrieves a definition from the manifest."""
+        if table_name not in self.ALLOWED_TABLES:
+            raise ValueError(f"Invalid manifest table name: {table_name}")
         try:
             with self.connect_db() as conn:
                 cursor = conn.cursor()

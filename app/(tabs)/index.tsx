@@ -1,356 +1,472 @@
-import { StyleSheet, ScrollView, Platform, Pressable } from "react-native";
-import { Text, View } from "@/components/Themed";
+import React from 'react';
 import {
-  FontAwesome6,
-  MaterialCommunityIcons,
-  Ionicons,
-} from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import Colors from "@/constants/Colors";
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  View,
+  Text,
+  Image,
+  RefreshControl,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import Colors, { getCurrencyName } from '@/constants/Colors';
+import { useXur } from '@/hooks/useXur';
+import { useWarframe } from '@/hooks/useWarframe';
+import { formatRemainingTime } from '@/services/warframe';
+import { SectionBarcodeHeader } from '@/components/MarathonPrimitives';
+
+const M = Colors.marathon;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const {
+    xurData,
+    isXurPresent,
+    timeUntilXur,
+    isLoading: d2Loading,
+    refreshXurData,
+  } = useXur('xur');
+  const {
+    telemetry,
+    now,
+    isLoading: wfLoading,
+    refreshTelemetry,
+  } = useWarframe();
+
+  const handleRefreshAll = async () => {
+    await Promise.all([refreshXurData(), refreshTelemetry()]);
+  };
+
+  const xurItems = xurData?.sales?.saleItems
+    ? Object.values(xurData.sales.saleItems).slice(0, 4)
+    : [];
+  const cycles = telemetry?.cycles || [];
+  const baro = telemetry?.voidTrader;
+  const sortie = telemetry?.sortie;
 
   return (
-    <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Hero Section */}
-      <LinearGradient
-        colors={["#0F0F23", "#1E293B", "#0F0F23"]}
-        style={styles.heroSection}
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      {/* Clean Editorial Top Bar */}
+      <View style={styles.topBar}>
+        <Text style={styles.brandTitle}>Orbit Market</Text>
+        <Text style={styles.topBarMeta}>
+          {isXurPresent ? 'Xûr Active' : 'Weekly Reset'}
+        </Text>
+      </View>
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={d2Loading || wfLoading}
+            onRefresh={handleRefreshAll}
+            tintColor={M.bone}
+          />
+        }
       >
-        <View style={styles.heroContent}>
-          <Text style={styles.title}>Orbit Market</Text>
-          <Text style={styles.subtitle}>Your vendor tracker</Text>
-          <Text style={styles.description}>
-            Track vendors, find the best gear, and stay updated with the latest
-            game events - all in one place.
-          </Text>
-        </View>
-      </LinearGradient>
+        {/* SECTION 1: DESTINY 2 // XÛR & VENDORS */}
+        <SectionBarcodeHeader
+          title="Destiny 2 · Xûr & Vendors"
+          subtitle="Weekly Exotic rotation & Tower armory"
+          rightText={timeUntilXur}
+        />
 
-      {/* Subtle transition gradient */}
-      <LinearGradient
-        colors={["#0F0B1F", Colors.destiny.dark + "20", Colors.destiny.dark]}
-        style={styles.subtleTransition}
-      />
-
-      {/* Current Features Section */}
-      <LinearGradient
-        colors={[
-          Colors.destiny.dark,
-          Colors.destiny.dark + "90",
-          Colors.destiny.dark,
-        ]}
-        style={styles.section}
-      >
-        <Text style={styles.sectionTitle}>What's Available Now</Text>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.featureCard,
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={() => router.push("/xur")}
-        >
-          <View style={styles.featureContent}>
-            <View style={styles.featureIcon}>
-              <MaterialCommunityIcons
-                name="alien"
-                size={28}
-                color={Colors.destiny.primary}
-              />
-            </View>
-            <View style={styles.featureInfo}>
-              <View style={styles.featureTitleRow}>
-                <Text style={styles.featureTitle}>Xûr's Weekly Store</Text>
-                <View style={styles.liveIndicator}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.liveText}>LIVE</Text>
-                </View>
-              </View>
-              <Text style={styles.featureDescription}>
-                See what exotic gear Xûr is selling this week and never miss out
-                on amazing weapons and armor.
+        <View style={styles.card}>
+          {/* Vendor Summary Row */}
+          <Pressable
+            style={styles.vendorHeaderRow}
+            onPress={() => router.push('/(tabs)/xur')}
+          >
+            <Image
+              source={{
+                uri: 'https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg',
+              }}
+              style={styles.vendorAvatar}
+            />
+            <View style={styles.vendorInfoCol}>
+              <Text style={styles.vendorName}>Xûr, Agent of the Nine</Text>
+              <Text style={styles.vendorMeta}>
+                Tower Bazaar · {isXurPresent ? 'Leaves in ' : 'Arrives in '}
+                <Text style={styles.monoInline}>{timeUntilXur}</Text>
               </Text>
             </View>
-          </View>
-        </Pressable>
-      </LinearGradient>
-
-      {/* Coming Soon Section */}
-      <LinearGradient
-        colors={[
-          Colors.destiny.dark,
-          Colors.destiny.dark + "60",
-          Colors.destiny.dark,
-        ]}
-        style={[styles.section, { paddingBottom: 60 }]}
-      >
-        <Text style={styles.sectionTitle}>Coming Soon</Text>
-
-        <View style={styles.upcomingCard}>
-          <View style={styles.upcomingHeader}>
-            <FontAwesome6
-              name="ghost"
-              size={20}
-              color={Colors.destiny.secondary}
-            />
-            <Text style={styles.upcomingTitle}>More Destiny 2 Vendors</Text>
-          </View>
-          <Text style={styles.upcomingDescription}>
-            Track all your favorite vendors like Ada-1, Banshee-44, and Saint-14
-            in one convenient place.
-          </Text>
-        </View>
-
-        <View style={styles.upcomingCard}>
-          <View style={styles.upcomingHeader}>
             <MaterialCommunityIcons
-              name="web"
+              name="chevron-right"
               size={20}
-              color={Colors.destiny.accent}
+              color={M.ash}
             />
-            <Text style={styles.upcomingTitle}>Warframe Integration</Text>
+          </Pressable>
+
+          {/* Direct Preview of Xûr's Featured Exotics */}
+          <View style={styles.itemPreviewList}>
+            {xurItems.map((item) => {
+              const iconUri = item.itemIcon.startsWith('http')
+                ? item.itemIcon
+                : `https://www.bungie.net${item.itemIcon}`;
+              const cost = item.costs?.[0];
+              const isExotic = item.rarity === 'Exotic';
+              return (
+                <Pressable
+                  key={item.itemHash}
+                  style={styles.previewRow}
+                  onPress={() => router.push('/(tabs)/xur')}
+                >
+                  <Image
+                    source={{ uri: iconUri }}
+                    style={[
+                      styles.previewIcon,
+                      { borderColor: isExotic ? M.amber : M.borderActive },
+                    ]}
+                  />
+                  <View style={styles.previewTextCol}>
+                    <Text style={styles.previewItemName} numberOfLines={1}>
+                      {item.itemName}
+                    </Text>
+                    <Text style={styles.previewItemSub} numberOfLines={1}>
+                      {item.itemTypeDisplayName || item.rarity}
+                    </Text>
+                  </View>
+                  {cost && cost.quantity > 0 ? (
+                    <View style={styles.previewPriceCol}>
+                      <Text style={styles.previewPriceVal}>{cost.quantity}</Text>
+                      <Text style={styles.previewPriceUnit}>
+                        {getCurrencyName(cost.itemHash)}
+                      </Text>
+                    </View>
+                  ) : null}
+                </Pressable>
+              );
+            })}
           </View>
-          <Text style={styles.upcomingDescription}>
-            Stay on top of Warframe events, alerts, and invasions with real-time
-            notifications.
-          </Text>
+
+          <Pressable
+            style={styles.ctaButton}
+            onPress={() => router.push('/(tabs)/xur')}
+          >
+            <Text style={styles.ctaButtonText}>
+              Browse All 5 Tower Vendors (Xûr, Banshee-44, Ada-1, Saint-14, Saladin)
+            </Text>
+            <MaterialCommunityIcons
+              name="arrow-right"
+              size={18}
+              color={M.void}
+            />
+          </Pressable>
         </View>
 
-        <View style={styles.upcomingCard}>
-          <View style={styles.upcomingHeader}>
-            <Ionicons name="apps" size={20} color={Colors.destiny.exotic} />
-            <Text style={styles.upcomingTitle}>Enhanced Features</Text>
+        {/* SECTION 2: WARFRAME // OPEN WORLD CYCLES (ALL 5 IN ONE BOARD) */}
+        <View style={styles.sectionSpacer}>
+          <SectionBarcodeHeader
+            title="Warframe · Open World Cycles"
+            subtitle="Real-time planet states across the Origin System"
+          />
+
+          <View style={styles.card}>
+            {cycles.map((cycle, index) => {
+              const countdown = cycle.expiry
+                ? formatRemainingTime(cycle.expiry, now)
+                : cycle.timeLeft || 'LIVE';
+              return (
+                <Pressable
+                  key={cycle.id}
+                  style={[
+                    styles.cycleRow,
+                    index === cycles.length - 1 && { borderBottomWidth: 0 },
+                  ]}
+                  onPress={() => router.push('/(tabs)/warframe')}
+                >
+                  <View style={styles.cycleLeft}>
+                    <Text style={styles.cycleName}>{cycle.name}</Text>
+                    <Text style={styles.cycleZone}>
+                      {cycle.zone.replace(' // ', ' · ')}
+                    </Text>
+                  </View>
+
+                  <View style={styles.cycleRight}>
+                    <Text style={styles.cycleStateLabel}>{cycle.state}</Text>
+                    <Text style={styles.cycleTimer}>{countdown}</Text>
+                  </View>
+                </Pressable>
+              );
+            })}
           </View>
-          <Text style={styles.upcomingDescription}>
-            More features like vendor history, community recommendations and
-            more are on the way !
-          </Text>
         </View>
-      </LinearGradient>
-    </ScrollView>
+
+        {/* SECTION 3: BARO KI'TEER & DAILY SORTIE */}
+        <View style={styles.sectionSpacer}>
+          <SectionBarcodeHeader
+            title="Baro Ki'Teer & Tactical Ops"
+            subtitle="Void Trader schedule & daily endgame rotation"
+          />
+
+          <View style={styles.card}>
+            {/* Baro Row */}
+            <Pressable
+              style={styles.opsRow}
+              onPress={() => router.push('/(tabs)/warframe')}
+            >
+              <View style={styles.opsLeft}>
+                <Text style={styles.opsTitle}>Baro Ki'Teer (Void Trader)</Text>
+                <Text style={styles.opsSubtitle}>
+                  {baro?.location || 'Kronia Relay (Saturn)'}
+                </Text>
+              </View>
+              <View style={styles.opsRight}>
+                <Text style={styles.opsStatus}>
+                  {baro?.active ? 'Docked Now' : 'Arrives in'}
+                </Text>
+                <Text style={styles.opsTimer}>
+                  {baro
+                    ? formatRemainingTime(
+                        baro.active ? baro.expiry : baro.activation,
+                        now
+                      )
+                    : '4D 23H'}
+                </Text>
+              </View>
+            </Pressable>
+
+            {/* Sortie Row */}
+            {sortie && (
+              <Pressable
+                style={[styles.opsRow, { borderBottomWidth: 0 }]}
+                onPress={() => router.push('/(tabs)/warframe')}
+              >
+                <View style={styles.opsLeft}>
+                  <Text style={styles.opsTitle}>Daily Sortie: {sortie.boss}</Text>
+                  <Text style={styles.opsSubtitle}>
+                    {sortie.faction} · {sortie.variants.length} Missions
+                  </Text>
+                </View>
+                <View style={styles.opsRight}>
+                  <Text style={styles.opsStatus}>Resets in</Text>
+                  <Text style={styles.opsTimer}>
+                    {formatRemainingTime(sortie.expiry, now)}
+                  </Text>
+                </View>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    backgroundColor: Colors.destiny.dark,
+    backgroundColor: M.void,
   },
-  heroSection: {
-    paddingTop: 40,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
-    minHeight: 320,
-    justifyContent: "center",
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+    backgroundColor: M.surface,
   },
-  heroContent: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
-  heroIconContainer: {
-    position: "relative",
-    marginBottom: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroIcon: {
-    marginBottom: 0,
-    opacity: 1,
-    zIndex: 2,
-  },
-  heroGlow: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.destiny.primary,
-    opacity: 0.25,
-    transform: [{ translateX: -40 }, { translateY: -40 }],
-    zIndex: 1,
-  },
-  title: {
-    fontSize: 42,
-    fontWeight: "bold",
-    color: Colors.destiny.ghost,
-    textAlign: "center",
-    marginBottom: 8,
-    letterSpacing: 1,
-    fontFamily: Platform.OS === "ios" ? "Helvetica Neue" : "Roboto",
-  },
-  subtitle: {
+  brandTitle: {
     fontSize: 20,
-    color: Colors.destiny.primary,
-    textAlign: "center",
-    marginBottom: 16,
-    fontWeight: "600",
-    letterSpacing: 1,
+    fontWeight: '800',
+    color: M.bone,
+    letterSpacing: -0.4,
   },
-  description: {
-    fontSize: 16,
-    color: Colors.destiny.ghost,
-    textAlign: "center",
-    lineHeight: 24,
-    marginTop: 8,
-    opacity: 0.8,
-    paddingHorizontal: 20,
-    marginBottom: 24,
+  topBarMeta: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: M.ash,
   },
-  decorativeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 16,
-    backgroundColor: "transparent",
-  },
-  decorativeLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.destiny.primary,
-    opacity: 0.3,
-    marginHorizontal: 16,
-  },
-  subtleTransition: {
-    height: 20,
-  },
-  section: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    backgroundColor: "transparent",
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: Colors.destiny.ghost,
-    marginBottom: 20,
-    textAlign: "center",
-    letterSpacing: 0.5,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: Colors.destiny.ghost,
-    opacity: 0.7,
-    marginBottom: 20,
-    letterSpacing: 0.3,
-  },
-  featureCard: {
-    backgroundColor: Colors.destiny.surface,
-    borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "rgba(0, 212, 255, 0.1)",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  featureContent: {
-    flexDirection: "row",
-    padding: 20,
-    alignItems: "flex-start",
-    backgroundColor: "transparent",
-  },
-  featureIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: "rgba(0, 212, 255, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  featureInfo: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  featureTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-    backgroundColor: "transparent",
-  },
-  featureTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: Colors.destiny.ghost,
+  scroll: {
     flex: 1,
   },
-  liveIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(16, 185, 129, 0.3)",
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.destiny.success,
-    marginRight: 4,
-  },
-  liveText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: Colors.destiny.success,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  featureDescription: {
-    fontSize: 14,
-    color: Colors.destiny.ghost,
-    lineHeight: 20,
-    opacity: 0.8,
-  },
-  upcomingCard: {
-    backgroundColor: Colors.destiny.surface,
+  scrollContent: {
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.destiny.primary,
+    paddingBottom: 36,
   },
-  upcomingHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    backgroundColor: "transparent",
+  sectionSpacer: {
+    marginTop: 24,
   },
-  upcomingTitle: {
+  card: {
+    backgroundColor: M.surface,
+    borderWidth: 1,
+    borderColor: M.border,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  vendorHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+    backgroundColor: M.surfaceElevated,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+  },
+  vendorAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: M.borderActive,
+  },
+  vendorInfoCol: {
+    flex: 1,
+  },
+  vendorName: {
     fontSize: 16,
-    fontWeight: "600",
-    color: Colors.destiny.ghost,
-    marginLeft: 12,
+    fontWeight: '700',
+    color: M.bone,
   },
-  upcomingDescription: {
+  vendorMeta: {
+    fontSize: 13,
+    color: M.ash,
+    marginTop: 2,
+  },
+  monoInline: {
+    fontFamily: 'SpaceMono',
+    color: M.bone,
+    fontWeight: '700',
+  },
+  itemPreviewList: {
+    paddingHorizontal: 14,
+  },
+  previewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+    gap: 12,
+  },
+  previewIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  previewTextCol: {
+    flex: 1,
+  },
+  previewItemName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: M.bone,
+  },
+  previewItemSub: {
+    fontSize: 13,
+    color: M.ash,
+    marginTop: 1,
+  },
+  previewPriceCol: {
+    alignItems: 'flex-end',
+  },
+  previewPriceVal: {
+    fontFamily: 'SpaceMono',
+    fontSize: 15,
+    fontWeight: '700',
+    color: M.bone,
+  },
+  previewPriceUnit: {
+    fontSize: 11,
+    color: M.ash,
+  },
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: M.bone,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  ctaButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: M.void,
+    flex: 1,
+    paddingRight: 8,
+  },
+  cycleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+  },
+  cycleLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  cycleName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: M.bone,
+  },
+  cycleZone: {
+    fontSize: 13,
+    color: M.ash,
+    marginTop: 2,
+  },
+  cycleRight: {
+    alignItems: 'flex-end',
+  },
+  cycleStateLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: M.inkSecondary,
+  },
+  cycleTimer: {
+    fontFamily: 'SpaceMono',
+    fontSize: 13,
+    fontWeight: '600',
+    color: M.ash,
+    marginTop: 2,
+  },
+  opsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+  },
+  opsLeft: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  opsTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: M.bone,
+  },
+  opsSubtitle: {
+    fontSize: 13,
+    color: M.ash,
+    marginTop: 2,
+  },
+  opsRight: {
+    alignItems: 'flex-end',
+  },
+  opsStatus: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: M.ash,
+  },
+  opsTimer: {
+    fontFamily: 'SpaceMono',
     fontSize: 14,
-    color: Colors.destiny.ghost,
-    lineHeight: 20,
-    opacity: 0.7,
-  },
-  footer: {
-    padding: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    paddingBottom: 80,
-  },
-  footerText: {
-    marginLeft: 12,
-    fontSize: 16,
-    color: Colors.destiny.ghost,
-    fontStyle: "italic",
-    opacity: 0.7,
+    fontWeight: '700',
+    color: M.bone,
+    marginTop: 2,
   },
 });

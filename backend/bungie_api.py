@@ -7,12 +7,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BUNGIE_API_KEY = os.getenv("BUNGIE_API_KEY")
-if BUNGIE_API_KEY is None:
+if not BUNGIE_API_KEY:
     raise ValueError("BUNGIE_API_KEY environment variable is not set.")
 
 BUNGIE_API_URL = "https://www.bungie.net/Platform"
 
-async_client = httpx.AsyncClient()
+async_client = httpx.AsyncClient(timeout=20.0)
 async def make_bungie_request(endpoint: str, params: Optional[dict] = None):
     """
     Makes an authenticated GET request to the Bungie.net API.

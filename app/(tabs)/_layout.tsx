@@ -1,76 +1,56 @@
-import React from "react";
-import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import * as Haptics from "expo-haptics";
+import React from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
 
-import Colors from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
+import Colors from '@/constants/Colors';
 
-function MaterialIcon(props: {
-  name: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+const M = Colors.marathon;
+
+function TabIcon(props: {
+  name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   color: string;
 }) {
   return (
-    <MaterialCommunityIcons size={24} style={{ marginBottom: -3 }} {...props} />
+    <MaterialCommunityIcons size={24} style={{ marginBottom: -2 }} {...props} />
   );
 }
 
-function IonicIcon(props: {
-  name: React.ComponentProps<typeof Ionicons>["name"];
-  color: string;
-}) {
-  return <Ionicons size={24} style={{ marginBottom: -3 }} {...props} />;
-}
-
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   const handleTabPress = () => {
-    // Trigger light haptic feedback on tab change
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
   };
 
   return (
     <Tabs
-      initialRouteName="index"
       screenOptions={{
-        tabBarActiveTintColor: Colors.destiny.primary,
-        tabBarInactiveTintColor: Colors.destiny.ghost + "60",
+        tabBarActiveTintColor: M.bone,
+        tabBarInactiveTintColor: M.ash,
         headerShown: false,
-        headerTransparent: false,
-        headerStyle: {
-          backgroundColor: Colors.destiny.dark,
-          borderBottomWidth: 1,
-          borderBottomColor: "rgba(0, 212, 255, 0.2)",
-        },
-        headerTitleStyle: {
-          color: Colors.destiny.ghost,
-          fontSize: 18,
-          fontWeight: "600",
-        },
-        headerTitleAlign: "center",
-        headerTintColor: Colors.destiny.ghost,
         tabBarStyle: {
-          backgroundColor: Colors.destiny.dark,
+          backgroundColor: M.void,
           borderTopWidth: 1,
-          borderTopColor: "rgba(0, 212, 255, 0.2)",
+          borderTopColor: M.border,
           elevation: 0,
-          paddingBottom: 8,
+          paddingBottom: 10,
           paddingTop: 8,
-          height: 80,
+          height: 72,
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "600",
+          fontWeight: '700',
         },
       }}
     >
       <Tabs.Screen
-        name="xur"
+        name="index"
         options={{
-          title: "Xûr",
+          title: 'Overview',
           tabBarIcon: ({ color }) => (
-            <MaterialIcon name="alien" color={color} />
+            <TabIcon name="view-dashboard-outline" color={String(color)} />
           ),
         }}
         listeners={{
@@ -78,10 +58,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="index"
+        name="xur"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => <IonicIcon name="home" color={color} />,
+          title: 'Destiny 2',
+          tabBarIcon: ({ color }) => (
+            <TabIcon name="rhombus-split" color={String(color)} />
+          ),
+        }}
+        listeners={{
+          tabPress: handleTabPress,
+        }}
+      />
+      <Tabs.Screen
+        name="warframe"
+        options={{
+          title: 'Warframe',
+          tabBarIcon: ({ color }) => (
+            <TabIcon name="orbit" color={String(color)} />
+          ),
         }}
         listeners={{
           tabPress: handleTabPress,
@@ -90,9 +84,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: 'Settings',
           tabBarIcon: ({ color }) => (
-            <IonicIcon name="settings" color={color} />
+            <TabIcon name="tune-vertical" color={String(color)} />
           ),
         }}
         listeners={{

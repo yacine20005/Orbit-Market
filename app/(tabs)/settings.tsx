@@ -1,393 +1,372 @@
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  Alert,
-  Linking,
   Pressable,
-} from "react-native";
-import { Text, View } from "@/components/Themed";
-import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Colors from "@/constants/Colors";
-import appConfig from "../../app.json";
+  View,
+  Text,
+  TextInput,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Colors from '@/constants/Colors';
+import { apiService } from '@/services/api';
+import { warframeService } from '@/services/warframe';
+import { SectionBarcodeHeader } from '@/components/MarathonPrimitives';
+
+const M = Colors.marathon;
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
-  const appVersion = appConfig.expo.version;
-  const handleNotificationSettings = () => {
-    Alert.alert(
-      "Notifications",
-      "Feature coming soon! Stay tuned for push notifications."
-    );
+  const [diag, setDiag] = useState<{
+    testing: boolean;
+    bungieOk: boolean;
+    warframeOk: boolean;
+    latencyMs: number;
+  }>({
+    testing: true,
+    bungieOk: true,
+    warframeOk: true,
+    latencyMs: 0,
+  });
+
+  const [apiKeyInput, setApiKeyInput] = useState(apiService.getApiKey());
+  const [savedNotice, setSavedNotice] = useState(false);
+  const [cacheFlushed, setCacheFlushed] = useState(false);
+
+  const runDiagnostics = async () => {
+    setDiag((prev) => ({ ...prev, testing: true }));
+    const res = await apiService.testConnection();
+    setDiag({
+      testing: false,
+      bungieOk: res.bungieOk,
+      warframeOk: res.warframeOk,
+      latencyMs: res.latencyMs,
+    });
   };
 
-  const handleFeedback = async () => {
-    try {
-      await Linking.openURL("https://yacine-hamadouche.me/#contact");
-    } catch (error) {
-      Alert.alert(
-        "Error",
-        "Could not open the contact page. Please visit https://yacine-hamadouche.me/#contact manually."
-      );
-    }
+  useEffect(() => {
+    runDiagnostics();
+  }, []);
+
+  const handleSaveApiKey = () => {
+    apiService.setApiKey(apiKeyInput);
+    setSavedNotice(true);
+    runDiagnostics();
+    setTimeout(() => setSavedNotice(false), 2500);
   };
 
-  const handleGitHubStar = async () => {
-    try {
-      await Linking.openURL("https://github.com/yacine20005/Orbit-Market");
-    } catch (error) {
-      Alert.alert(
-        "Error",
-        "Could not open GitHub. Please visit https://github.com/yacine20005/Orbit-Market manually."
-      );
-    }
+  const handleFlushCaches = async () => {
+    setCacheFlushed(true);
+    await Promise.all([
+      apiService.getVendorInventory('xur', true),
+      warframeService.getTelemetry(true),
+    ]);
+    setTimeout(() => setCacheFlushed(false), 2000);
   };
-
-  const handlePortfolio = async () => {
-    try {
-      await Linking.openURL("https://yacine-hamadouche.me");
-    } catch (error) {
-      Alert.alert(
-        "Error",
-        "Could not open portfolio. Please visit https://yacine-hamadouche.me manually."
-      );
-    }
-  };
-
-  interface SettingsOption {
-    id: string;
-    title: string;
-    description: string;
-    icon: any;
-    onPress: () => void;
-    showArrow?: boolean;
-    showToggle?: boolean;
-  }
-
-  const settingsOptions: SettingsOption[] = [
-    {
-      id: "notifications",
-      title: "Notifications",
-      description: "Alerts for new inventories",
-      icon: "bell",
-      onPress: handleNotificationSettings,
-      showArrow: true,
-    },
-  ];
-
-  const aboutOptions: SettingsOption[] = [
-    {
-      id: "version",
-      title: "App Version",
-      description: `v${appVersion}`,
-      icon: "information-outline",
-      onPress: () =>
-        Alert.alert(
-          "About Orbit Market",
-          `Version: ${appVersion}\nOrbit Market helps you track vendors across multiple games.`
-        ),
-    },
-    {
-      id: "feedback",
-      title: "Send Feedback",
-      description: "Share your ideas and suggestions",
-      icon: "message-text-outline",
-      onPress: handleFeedback,
-      showArrow: true,
-    },
-    {
-      id: "github",
-      title: "GitHub",
-      description: "⭐ Give us a star on GitHub",
-      icon: "github",
-      onPress: handleGitHubStar,
-      showArrow: true,
-    },
-    {
-      id: "portfolio",
-      title: "Creator's Portfolio",
-      description: "Discover my work",
-      icon: "account-circle-outline",
-      onPress: handlePortfolio,
-      showArrow: true,
-    },
-  ];
 
   return (
-    <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <LinearGradient
-        colors={["#0F0F23", "#1E293B", "#0F0F23"]}
-        style={styles.headerSection}
-      >
-        <View style={styles.headerContent}>
-          <MaterialCommunityIcons
-            name="cog"
-            size={48}
-            color={Colors.destiny.primary}
-          />
-          <Text style={styles.headerTitle}>Settings</Text>
-          <Text style={styles.headerSubtitle}>Configure your experience</Text>
-        </View>
-      </LinearGradient>
-
-      {/* Settings Section */}
-      <LinearGradient
-        colors={[
-          Colors.destiny.dark,
-          Colors.destiny.dark + "90",
-          Colors.destiny.dark,
-        ]}
-        style={styles.section}
-      >
-        <Text style={styles.sectionTitle}>App Settings</Text>
-
-        {settingsOptions.map((option) => (
-          <Pressable
-            key={option.id}
-            style={({ pressed }) => [
-              styles.optionCard,
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={option.onPress}
-          >
-            <View style={styles.optionContent}>
-              <View style={styles.optionIcon}>
-                <MaterialCommunityIcons
-                  name={option.icon}
-                  size={24}
-                  color={Colors.destiny.primary}
-                />
-              </View>
-              <View style={styles.optionText}>
-                <View style={styles.optionTitleRow}>
-                  <Text style={styles.optionTitle}>{option.title}</Text>
-                </View>
-                <Text style={styles.optionDescription}>
-                  {option.description}
-                </Text>
-              </View>
-              {option.showArrow && (
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={Colors.destiny.ghost}
-                  style={{ opacity: 0.5 }}
-                />
-              )}
-              {option.showToggle && (
-                <View style={styles.toggle}>
-                  <View
-                    style={[
-                      styles.toggleSwitch,
-                      { backgroundColor: Colors.destiny.primary },
-                    ]}
-                  />
-                </View>
-              )}
-            </View>
-          </Pressable>
-        ))}
-      </LinearGradient>
-
-      {/* About Section */}
-      <LinearGradient
-        colors={[
-          Colors.destiny.dark,
-          Colors.destiny.dark + "90",
-          Colors.destiny.dark,
-        ]}
-        style={styles.section}
-      >
-        <Text style={styles.sectionTitle}>About</Text>
-
-        {aboutOptions.map((option) => (
-          <Pressable
-            key={option.id}
-            style={({ pressed }) => [
-              styles.optionCard,
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={option.onPress}
-          >
-            <View style={styles.optionContent}>
-              <View style={styles.optionIcon}>
-                <MaterialCommunityIcons
-                  name={option.icon as any}
-                  size={24}
-                  color={Colors.destiny.primary}
-                />
-              </View>
-              <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>{option.title}</Text>
-                <Text style={styles.optionDescription}>
-                  {option.description}
-                </Text>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={Colors.destiny.ghost}
-                style={{ opacity: 0.5 }}
-              />
-            </View>
-          </Pressable>
-        ))}
-      </LinearGradient>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <MaterialCommunityIcons
-          name="shield-star"
-          size={20}
-          color={Colors.destiny.primary}
-        />
-        <Text style={styles.footerText}>
-          Orbit Market • Created by yacine20005
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      <View style={styles.topBar}>
+        <Text style={styles.screenTitle}>Settings & Status</Text>
+        <Text style={styles.topBarMeta}>
+          {diag.testing
+            ? 'Checking...'
+            : diag.bungieOk && diag.warframeOk
+            ? 'Online'
+            : 'Snapshot'}
         </Text>
       </View>
-    </ScrollView>
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* API STATUS */}
+        <SectionBarcodeHeader
+          title="API Connection Status"
+          subtitle="Direct client-to-API status and response latency"
+          rightText={diag.latencyMs > 0 ? `${diag.latencyMs} ms` : ''}
+        />
+
+        <View style={styles.card}>
+          <View style={styles.statusRow}>
+            <View style={styles.statusLeft}>
+              <Text style={styles.statusTitle}>Bungie.net Platform API</Text>
+              <Text style={styles.statusUrl}>
+                https://www.bungie.net/Platform/Destiny2
+              </Text>
+            </View>
+            <Text style={styles.statusValue}>
+              {diag.bungieOk ? 'Online' : 'Snapshot'}
+            </Text>
+          </View>
+
+          <View style={styles.statusRow}>
+            <View style={styles.statusLeft}>
+              <Text style={styles.statusTitle}>Warframe WorldState API</Text>
+              <Text style={styles.statusUrl}>
+                https://api.warframestat.us/pc
+              </Text>
+            </View>
+            <Text style={styles.statusValue}>
+              {diag.warframeOk ? 'Online' : 'Snapshot'}
+            </Text>
+          </View>
+
+          <View style={[styles.statusRow, { borderBottomWidth: 0 }]}>
+            <View style={styles.statusLeft}>
+              <Text style={styles.statusTitle}>Embedded Destiny 2 Manifest</Text>
+              <Text style={styles.statusUrl}>
+                56 pre-indexed Exotic & Legendary items
+              </Text>
+            </View>
+            <Text style={styles.statusValue}>Ready</Text>
+          </View>
+
+          <View style={styles.actionRow}>
+            <Pressable style={styles.primaryBtn} onPress={runDiagnostics}>
+              <MaterialCommunityIcons
+                name="refresh"
+                size={18}
+                color={M.void}
+              />
+              <Text style={styles.primaryBtnText}>
+                {diag.testing ? 'Testing...' : 'Test Connection'}
+              </Text>
+            </Pressable>
+
+            <Pressable style={styles.secondaryBtn} onPress={handleFlushCaches}>
+              <Text style={styles.secondaryBtnText}>
+                {cacheFlushed ? 'Refreshed' : 'Refresh All Data'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* BUNGIE API KEY OVERRIDE */}
+        <View style={styles.sectionSpacer}>
+          <SectionBarcodeHeader
+            title="Bungie.net API Key"
+            subtitle="X-API-Key header used for Destiny 2 requests"
+          />
+
+          <View style={styles.cardPad}>
+            <Text style={styles.helperText}>
+              Orbit Market connects directly to Bungie.net from your device. You
+              can enter or replace your personal Bungie API key below at any
+              time.
+            </Text>
+
+            <TextInput
+              style={styles.input}
+              value={apiKeyInput}
+              onChangeText={setApiKeyInput}
+              placeholder="Enter Bungie X-API-Key..."
+              placeholderTextColor={M.ash}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <Pressable style={styles.saveKeyBtn} onPress={handleSaveApiKey}>
+              <Text style={styles.saveKeyBtnText}>
+                {savedNotice ? 'API Key Applied' : 'Save & Apply API Key'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ABOUT */}
+        <View style={styles.sectionSpacer}>
+          <SectionBarcodeHeader
+            title="About Orbit Market"
+            subtitle="Version 2.0.0 · Standalone Release"
+          />
+
+          <View style={styles.cardPad}>
+            <View style={styles.specRow}>
+              <Text style={styles.specKey}>Application</Text>
+              <Text style={styles.specVal}>Orbit Market v2.0.0</Text>
+            </View>
+            <View style={styles.specRow}>
+              <Text style={styles.specKey}>Design Direction</Text>
+              <Text style={styles.specVal}>Swiss Editorial</Text>
+            </View>
+            <View style={styles.specRow}>
+              <Text style={styles.specKey}>Architecture</Text>
+              <Text style={styles.specVal}>Autonomous Client + Offline Cache</Text>
+            </View>
+            <View style={[styles.specRow, { borderBottomWidth: 0 }]}>
+              <Text style={styles.specKey}>Author</Text>
+              <Text style={styles.specVal}>Yacine Hamadouche (yacine20005)</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    backgroundColor: Colors.destiny.dark,
-    paddingBottom: 120, // Space for tabs like in home
+    backgroundColor: M.void,
   },
-  headerSection: {
-    paddingTop: 24,
-    paddingBottom: 32,
-    paddingHorizontal: 24,
-    minHeight: 180,
-    justifyContent: "center",
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    backgroundColor: M.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
   },
-  headerContent: {
-    alignItems: "center",
-    backgroundColor: "transparent",
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: M.bone,
+    letterSpacing: -0.4,
   },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: Colors.destiny.ghost,
-    textAlign: "center",
-    marginTop: 16,
-    marginBottom: 8,
+  topBarMeta: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: M.ash,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: Colors.destiny.primary,
-    textAlign: "center",
-    opacity: 0.8,
+  scroll: {
+    flex: 1,
   },
-  section: {
-    padding: 24,
-    backgroundColor: "transparent",
-    marginBottom: 8,
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 36,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: Colors.destiny.ghost,
-    marginBottom: 20,
-    textAlign: "center",
-    letterSpacing: 0.5,
+  sectionSpacer: {
+    marginTop: 24,
   },
-  optionCard: {
-    backgroundColor: Colors.destiny.surface,
-    borderRadius: 16,
-    marginBottom: 16,
+  card: {
+    backgroundColor: M.surface,
     borderWidth: 1,
-    borderColor: "rgba(0, 212, 255, 0.1)",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderColor: M.border,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
-  optionContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "transparent",
-  },
-  optionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: "rgba(0, 212, 255, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  optionText: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  optionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
-    backgroundColor: "transparent",
-  },
-  optionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: Colors.destiny.ghost,
-    flex: 1,
-  },
-  comingSoonIndicator: {
-    backgroundColor: "rgba(255, 107, 53, 0.15)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+  cardPad: {
+    backgroundColor: M.surface,
     borderWidth: 1,
-    borderColor: "rgba(255, 107, 53, 0.3)",
+    borderColor: M.border,
+    borderRadius: 6,
+    padding: 16,
   },
-  comingSoonText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: Colors.destiny.secondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+    gap: 12,
   },
-  optionDescription: {
+  statusLeft: {
+    flex: 1,
+  },
+  statusTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: M.bone,
+  },
+  statusUrl: {
+    fontSize: 13,
+    color: M.ash,
+    marginTop: 2,
+  },
+  statusValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: M.inkSecondary,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    padding: 14,
+    backgroundColor: M.surfaceElevated,
+    borderTopWidth: 1,
+    borderTopColor: M.border,
+  },
+  primaryBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: M.bone,
+    paddingVertical: 11,
+    borderRadius: 4,
+  },
+  primaryBtnText: {
     fontSize: 14,
-    color: Colors.destiny.ghost,
-    opacity: 0.8,
+    fontWeight: '700',
+    color: M.void,
+  },
+  secondaryBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: M.surface,
+    borderWidth: 1,
+    borderColor: M.borderActive,
+    paddingVertical: 11,
+    borderRadius: 4,
+  },
+  secondaryBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: M.bone,
+  },
+  helperText: {
+    fontSize: 14,
+    color: M.inkSecondary,
     lineHeight: 20,
+    marginBottom: 12,
   },
-  toggle: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    justifyContent: "center",
-    paddingHorizontal: 2,
+  input: {
+    backgroundColor: M.void,
+    borderWidth: 1,
+    borderColor: M.borderActive,
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    color: M.bone,
+    fontFamily: 'SpaceMono',
+    fontSize: 14,
+    marginBottom: 12,
   },
-  toggleSwitch: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignSelf: "flex-end",
+  saveKeyBtn: {
+    backgroundColor: M.bone,
+    paddingVertical: 12,
+    borderRadius: 4,
+    alignItems: 'center',
   },
-  footer: {
-    padding: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    paddingBottom: 80,
+  saveKeyBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: M.void,
   },
-  footerText: {
-    marginLeft: 12,
-    fontSize: 16,
-    color: Colors.destiny.ghost,
-    fontStyle: "italic",
-    opacity: 0.7,
+  specRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+  },
+  specKey: {
+    fontSize: 14,
+    color: M.ash,
+  },
+  specVal: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: M.bone,
   },
 });

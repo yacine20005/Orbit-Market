@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import xur, general, manifest
 from .manifest_manager import update_manifest_if_needed
+from . import bungie_api
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -57,6 +58,7 @@ async def lifespan(app: FastAPI):
             await periodic_task
         except asyncio.CancelledError:
             logger.info("✅ Periodic task stopped")
+    await bungie_api.async_client.aclose()
 
 app = FastAPI(
     title="Orbit Market API",

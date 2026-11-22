@@ -2,16 +2,16 @@
   "expo": {
     "name": "Orbit Market",
     "slug": "orbit-market",
-    "version": "1.2.1",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "orbit-market",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#060608"
     },
     "ios": {
       "supportsTablet": true,
@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#060608"
       },
       "package": "com.yacine20005.orbitmarket",
       "permissions": [
@@ -33,15 +33,8 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png",
-      "build": {
-        "babel": {
-          "include": [
-            "web"
-          ]
-        }
-      }
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -58,10 +51,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "79938b79-9400-44b5-967b-8bed837291f1"
-      }
+      "router": {}
     }
   }
 }

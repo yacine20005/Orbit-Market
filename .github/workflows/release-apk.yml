@@ -1,0 +1,98 @@
+name: Build & Release Android APK
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag version for GitHub Release (e.g. v2.0.0)'
+        required: false
+        default: 'v2.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-android-apk:
+    name: Compile Android Release APK (Ubuntu Runner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      EXPO_PUBLIC_BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: TypeScript & Unit Test Verification
+        run: |
+          ./node_modules/.bin/tsc --noEmit
+          npm test
+
+      - name: Generate Android Native Project (Expo Prebuild)
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build Standalone Release APK
+        working-directory: ./android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Rename APK for Release
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk orbit-market-v2.0.0.apk
+          ls -lh orbit-market-v2.0.0.apk
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-market-v2.0.0-apk
+          path: orbit-market-v2.0.0.apk
+          if-no-files-found: error
+
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag || 'v2.0.0' }}
+          name: "Orbit Market v2.0.0 // UESC Telemetry Terminal (Marathon Edition)"
+          body: |
+            ## ORBIT MARKET v2.0.0 — STANDALONE ANDROID APK
+            **Tactical Companion for Destiny 2 & Warframe** (*Bungie Marathon 2025 Graphic Realism UI*)
+
+            ### What's Included
+            - **100% Autonomous Client**: Connects directly to Bungie.net Platform API & WarframeStat.us WorldState API with embedded Destiny 2 Manifest snapshot (`constants/ManifestSnapshot.json`).
+            - **Destiny 2 (5 Vendors)**: Xûr (live public sales + Exotic perks & segmented stats), Banshee-44, Ada-1, Saint-14 (Trials of Osiris), and Valus Saladin (Iron Banner).
+            - **Warframe WorldState**: Live 1Hz Open-World cycle timers (Cetus, Orb Vallis, Cambion Drift, Zariman, Duviri), Baro Ki'Teer Void Trader inventory, Void Fissures, Invasions, Daily Sortie, Archon Hunt & Nightwave.
+
+            ### Installation (Android)
+            1. Download **`orbit-market-v2.0.0.apk`** below on your Android device.
+            2. Open the file and allow installation from your browser if prompted.
+          files: orbit-market-v2.0.0.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,32 +1,73 @@
-const tintColorLight = '#00D4FF'; // Bright cyan blue
-const tintColorDark = '#00A8CC';  // Darker cyan
+// Marathon (2025) Swiss Editorial Color System — High-Contrast Legibility Floor (WCAG AA/AAA)
+const ACID_LIME = '#C8FF00';
+const SIGNAL_VERMILION = '#FF4411';
+const BIOMETRIC_CYAN = '#00F0FF';
+const EXOTIC_AMBER = '#FFB800';
+const CARBON_VOID = '#090A0F';
+const PANEL_SURFACE = '#12141C';
+const PANEL_ELEVATED = '#1A1D28';
+const SILKSCREEN_BONE = '#F4F2EA';
+const INK_SECONDARY = '#C8CACE';
+const TECH_ASH = '#949AB0';
+const GRID_MUTED = '#5E6478';
+const GRID_BORDER = '#242836';
+
+export const marathon = {
+  void: CARBON_VOID,
+  surface: PANEL_SURFACE,
+  surfaceElevated: PANEL_ELEVATED,
+  bone: SILKSCREEN_BONE,
+  inkSecondary: INK_SECONDARY,
+  ash: TECH_ASH,
+  muted: GRID_MUTED,
+  border: GRID_BORDER,
+  borderActive: '#3D4459',
+  acid: ACID_LIME,
+  vermilion: SIGNAL_VERMILION,
+  cyan: BIOMETRIC_CYAN,
+  amber: EXOTIC_AMBER,
+  violet: '#C259FF',
+  emerald: '#00E676',
+};
+
+export function getRarityColor(rarity?: string): string {
+  switch ((rarity || '').toLowerCase()) {
+    case 'exotic':
+      return marathon.amber;
+    case 'legendary':
+      return marathon.violet;
+    case 'rare':
+      return marathon.cyan;
+    default:
+      return marathon.acid;
+  }
+}
+
+export function getCurrencyName(itemHash: number): string {
+  switch (itemHash) {
+    case 800069450:
+      return 'Strange Coins';
+    case 3159615086:
+    case 2817410917:
+      return 'Glimmer';
+    default:
+      return 'Requisition';
+  }
+}
+
+export function getClassColor(className: string): string {
+  switch (className.toLowerCase()) {
+    case 'titan':
+      return marathon.vermilion;
+    case 'hunter':
+      return marathon.cyan;
+    case 'warlock':
+      return marathon.amber;
+    default:
+      return marathon.bone;
+  }
+}
 
 export default {
-  light: {
-    text: '#0A0A0A',
-    background: '#F0F4F8',
-    tint: tintColorLight,
-    tabIconDefault: '#64748B',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#E2E8F0',
-    background: '#0F0F23', // Deep space dark
-    tint: tintColorDark,
-    tabIconDefault: '#64748B',
-    tabIconSelected: tintColorDark,
-  },
-  // Destiny 2 themed colors
-  destiny: {
-    primary: '#00D4FF',      // Traveler light blue
-    secondary: '#FF6B35',    // Solar orange
-    accent: '#9333EA',       // Void purple
-    dark: '#0F0F23',         // Deep space
-    surface: '#1E293B',      // Dark surface
-    surfaceLight: 'rgba(30, 41, 59, 0.8)', // Transparent surface
-    ghost: '#F1F5F9',        // Ghost white
-    legendary: '#522F9A',    // Legendary purple
-    exotic: '#FBBF24',       // Exotic gold
-    success: '#10B981',      // Arc green
-  },
+  marathon,
 };

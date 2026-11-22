@@ -1,17 +1,21 @@
 import { Link, Stack } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
+import Colors from '@/constants/Colors';
 
-import { Text, View } from '@/components/Themed';
+const M = Colors.marathon;
 
 export default function NotFoundScreen() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Oops!' }} />
+      <Stack.Screen options={{ title: 'ERR // 404' }} />
       <View style={styles.container}>
-        <Text style={styles.title}>This screen doesn't exist.</Text>
+        <View style={styles.codePill}>
+          <Text style={styles.codeText}>ERR // 404 SECTOR MISSING</Text>
+        </View>
+        <Text style={styles.title}>TELEMETRY NODE NOT FOUND</Text>
 
         <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Go to home screen!</Text>
+          <Text style={styles.linkText}>[RETURN TO ORBITAL HUB]</Text>
         </Link>
       </View>
     </>
@@ -23,18 +27,38 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
+    backgroundColor: M.void,
+  },
+  codePill: {
+    backgroundColor: M.vermilion,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 12,
+  },
+  codeText: {
+    fontFamily: 'SpaceMono',
+    fontSize: 10,
+    fontWeight: '700',
+    color: M.void,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '900',
+    color: M.bone,
+    letterSpacing: 1,
   },
   link: {
-    marginTop: 15,
-    paddingVertical: 15,
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: M.acid,
   },
   linkText: {
-    fontSize: 14,
-    color: '#2e78b7',
+    fontFamily: 'SpaceMono',
+    fontSize: 12,
+    fontWeight: '700',
+    color: M.acid,
   },
 });
