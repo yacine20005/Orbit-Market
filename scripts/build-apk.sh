@@ -54,7 +54,7 @@ fi
 
 if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "$ANDROID_HOME" ]; then
   echo "Error: Android SDK not found (ANDROID_HOME is unset or directory missing)." >&2
-  echo "Install Android SDK (platforms;android-37, build-tools;37.0.0, ndk;27.1.12297006) or set ANDROID_HOME." >&2
+  echo "Install Android SDK (platforms;android-37.0, build-tools;37.0.0, ndk;27.1.12297006) or set ANDROID_HOME." >&2
   exit 1
 fi
 
