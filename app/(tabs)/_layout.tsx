@@ -2,22 +2,39 @@ import React from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/Colors';
 
 const M = Colors.marathon;
 
-function TabIcon(props: {
+function TabIcon({
+  name,
+  color,
+  focused,
+}: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   color: string;
+  focused: boolean;
 }) {
   return (
-    <MaterialCommunityIcons size={24} style={{ marginBottom: -2 }} {...props} />
+    <View style={styles.iconWrap}>
+      <View
+        style={[
+          styles.activeIndicator,
+          focused && { backgroundColor: M.acid },
+        ]}
+      />
+      <MaterialCommunityIcons name={name} size={23} color={color} />
+    </View>
   );
 }
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 10);
+
   const handleTabPress = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -27,7 +44,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: M.bone,
+        tabBarActiveTintColor: M.acid,
         tabBarInactiveTintColor: M.ash,
         headerShown: false,
         tabBarStyle: {
@@ -35,13 +52,17 @@ export default function TabLayout() {
           borderTopWidth: 1,
           borderTopColor: M.border,
           elevation: 0,
-          paddingBottom: 10,
-          paddingTop: 8,
-          height: 72,
+          paddingBottom: bottomInset,
+          paddingTop: 4,
+          height: 58 + bottomInset,
+        },
+        tabBarItemStyle: {
+          minHeight: 48,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '700',
+          marginTop: 2,
         },
       }}
     >
@@ -49,8 +70,12 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Overview',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="view-dashboard-outline" color={String(color)} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name={focused ? 'view-dashboard' : 'view-dashboard-outline'}
+              color={String(color)}
+              focused={focused}
+            />
           ),
         }}
         listeners={{
@@ -61,8 +86,12 @@ export default function TabLayout() {
         name="xur"
         options={{
           title: 'Destiny 2',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="rhombus-split" color={String(color)} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name={focused ? 'rhombus-split' : 'rhombus-split-outline'}
+              color={String(color)}
+              focused={focused}
+            />
           ),
         }}
         listeners={{
@@ -73,8 +102,12 @@ export default function TabLayout() {
         name="warframe"
         options={{
           title: 'Warframe',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="orbit" color={String(color)} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="orbit"
+              color={String(color)}
+              focused={focused}
+            />
           ),
         }}
         listeners={{
@@ -85,8 +118,12 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="tune-vertical" color={String(color)} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="tune-vertical"
+              color={String(color)}
+              focused={focused}
+            />
           ),
         }}
         listeners={{
@@ -96,3 +133,18 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+  },
+  activeIndicator: {
+    width: 24,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: 'transparent',
+    marginBottom: 4,
+  },
+});

@@ -1,22 +1,48 @@
-import { Link, Stack } from 'expo-router';
-import { StyleSheet, View, Text } from 'react-native';
-import Colors from '@/constants/Colors';
+import { Stack, useRouter } from 'expo-router';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Colors, { radii } from '@/constants/Colors';
 
 const M = Colors.marathon;
 
 export default function NotFoundScreen() {
+  const router = useRouter();
+
   return (
     <>
-      <Stack.Screen options={{ title: 'ERR // 404' }} />
+      <Stack.Screen options={{ title: 'Page Not Found' }} />
       <View style={styles.container}>
-        <View style={styles.codePill}>
-          <Text style={styles.codeText}>ERR // 404 SECTOR MISSING</Text>
+        <View style={styles.iconBox}>
+          <MaterialCommunityIcons
+            name="compass-off-outline"
+            size={28}
+            color={M.ash}
+          />
         </View>
-        <Text style={styles.title}>TELEMETRY NODE NOT FOUND</Text>
+        <Text style={styles.title} accessibilityRole="header">
+          Screen Not Found
+        </Text>
+        <Text style={styles.subtitle}>
+          This route does not exist in Orbit Market. Return to the live
+          overview to check vendors and world cycles.
+        </Text>
 
-        <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>[RETURN TO ORBITAL HUB]</Text>
-        </Link>
+        <Pressable
+          style={({ pressed }) => [
+            styles.linkBtn,
+            pressed && { opacity: 0.85 },
+          ]}
+          onPress={() => router.replace('/')}
+          accessibilityRole="button"
+          accessibilityLabel="Return to Overview"
+        >
+          <Text style={styles.linkText}>Back to Overview</Text>
+          <MaterialCommunityIcons
+            name="arrow-right"
+            size={18}
+            color={M.void}
+          />
+        </Pressable>
       </View>
     </>
   );
@@ -30,35 +56,45 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: M.void,
   },
-  codePill: {
-    backgroundColor: M.vermilion,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginBottom: 12,
-  },
-  codeText: {
-    fontFamily: 'SpaceMono',
-    fontSize: 10,
-    fontWeight: '700',
-    color: M.void,
+  iconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: radii.card,
+    backgroundColor: M.surface,
+    borderWidth: 1,
+    borderColor: M.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '900',
+    fontSize: 20,
+    fontWeight: '800',
     color: M.bone,
-    letterSpacing: 1,
+    letterSpacing: -0.4,
   },
-  link: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: M.acid,
+  subtitle: {
+    fontSize: 14,
+    color: M.inkSecondary,
+    lineHeight: 20,
+    textAlign: 'center',
+    maxWidth: 300,
+    marginTop: 8,
+  },
+  linkBtn: {
+    marginTop: 22,
+    minHeight: 48,
+    paddingHorizontal: 20,
+    borderRadius: radii.control,
+    backgroundColor: M.acid,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   linkText: {
-    fontFamily: 'SpaceMono',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
-    color: M.acid,
+    color: M.void,
   },
 });

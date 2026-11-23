@@ -10,7 +10,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
-        <title>ORBIT MARKET // UESC TELEMETRY OS</title>
+        <title>Orbit Market</title>
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: marathonWebStyles }} />
       </head>
@@ -21,25 +21,30 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
 const marathonWebStyles = `
 body {
-  background-color: #060608;
-  color: #F2F0E8;
+  background-color: #090A0F;
+  color: #F4F2EA;
   caret-color: #C8FF00;
 }
 ::selection {
   background-color: #C8FF00;
-  color: #060608;
+  color: #090A0F;
+}
+:focus-visible {
+  outline: 2px solid #C8FF00;
+  outline-offset: 2px;
 }
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #060608;
+  background: #090A0F;
 }
 ::-webkit-scrollbar-thumb {
-  background: #222530;
+  background: #242836;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C8FF00;
+  background: #3D4459;
 }
 `;

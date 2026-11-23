@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, ComponentRef } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -9,10 +9,16 @@ import {
   Text,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '@/constants/Colors';
+import Colors, { radii, getClassColor } from '@/constants/Colors';
 import { useXur } from '@/hooks/useXur';
 import { DESTINY_VENDORS, DestinyVendorId } from '@/services/api';
 import XurItemCard from '@/components/XurItemCard';
+import {
+  ScreenHeader,
+  SkeletonBlock,
+  ErrorBanner,
+  EmptyStateCard,
+} from '@/components/MarathonPrimitives';
 
 const M = Colors.marathon;
 
@@ -21,51 +27,118 @@ type ClassFilter = (typeof CLASS_FILTERS)[number];
 
 export default function XurScreen() {
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const {
     xurData,
     activeVendor,
     selectedVendorId,
     selectVendor,
     isLoading,
+    error,
     isXurPresent,
     timeUntilXur,
     refreshXurData,
   } = useXur('xur');
 
   const [selectedClass, setSelectedClass] = useState<ClassFilter>('All');
-  const [expandedKey, setExpandedKey] = useState<string | null>('0');
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const autoExpandPendingRef = useRef(true);
+
+  const allEntries = useMemo(
+    () => Object.entries(xurData?.sales?.saleItems || {}),
+    [xurData]
+  );
+
+  const classCounts = useMemo(() => {
+    const counts: Record<ClassFilter, number> = {
+      All: allEntries.length,
+      Titan: 0,
+      Hunter: 0,
+      Warlock: 0,
+    };
+    for (const [, item] of allEntries) {
+      if (item.supportedClasses?.includes('Titan')) counts.Titan += 1;
+      if (item.supportedClasses?.includes('Hunter')) counts.Hunter += 1;
+      if (item.supportedClasses?.includes('Warlock')) counts.Warlock += 1;
+    }
+    return counts;
+  }, [allEntries]);
 
   const items = useMemo(() => {
-    const rawMap = xurData?.sales?.saleItems || {};
-    return Object.entries(rawMap).filter(([_, item]) => {
-      if (selectedClass === 'All') return true;
-      return item.supportedClasses?.includes(selectedClass);
-    });
-  }, [xurData, selectedClass]);
+    if (selectedClass === 'All') return allEntries;
+    return allEntries.filter(([, item]) =>
+      item.supportedClasses?.includes(selectedClass)
+    );
+  }, [allEntries, selectedClass]);
+
+  // Auto-expand the first actual item key on vendor load or class switch
+  useEffect(() => {
+    if (autoExpandPendingRef.current && items.length > 0) {
+      setExpandedKey(items[0][0]);
+      autoExpandPendingRef.current = false;
+    } else if (
+      expandedKey !== null &&
+      !items.some(([key]) => key === expandedKey)
+    ) {
+      setExpandedKey(items.length > 0 ? items[0][0] : null);
+    }
+  }, [items, expandedKey]);
 
   const handleVendorChange = (id: DestinyVendorId) => {
+    if (id === selectedVendorId) return;
     setSelectedClass('All');
-    setExpandedKey('0');
+    setExpandedKey(null);
+    autoExpandPendingRef.current = true;
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
     selectVendor(id);
+  };
+
+  const handleClassChange = (cls: ClassFilter) => {
+    setSelectedClass(cls);
+    setExpandedKey(null);
+    autoExpandPendingRef.current = true;
+  };
+
+  const handleToggleItem = (key: string) => {
+    autoExpandPendingRef.current = false;
+    setExpandedKey((prev) => (prev === key ? null : key));
   };
 
   const vendorIconUri = activeVendor.icon.startsWith('http')
     ? activeVendor.icon
     : `https://www.bungie.net${activeVendor.icon}`;
 
+  const headerStatusLabel =
+    selectedVendorId === 'xur'
+      ? isXurPresent
+        ? 'Xûr Active'
+        : 'Away'
+      : xurData?.isLiveApi
+      ? 'Live Sync'
+      : 'Snapshot';
+
+  const headerStatusColor =
+    selectedVendorId === 'xur'
+      ? isXurPresent
+        ? M.emerald
+        : M.amber
+      : xurData?.isLiveApi
+      ? M.emerald
+      : M.amber;
+
+  const headerStatusDot =
+    selectedVendorId === 'xur' ? isXurPresent : Boolean(xurData?.isLiveApi);
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Top Bar */}
-      <View style={styles.topBar}>
-        <Text style={styles.screenTitle}>Destiny 2 · Vendors</Text>
-        <Text style={styles.topBarMeta}>
-          {selectedVendorId === 'xur' && isXurPresent
-            ? 'Xûr Active'
-            : 'Tower Network'}
-        </Text>
-      </View>
+      <ScreenHeader
+        title="Destiny 2"
+        statusLabel={headerStatusLabel}
+        statusColor={headerStatusColor}
+        statusDot={headerStatusDot}
+      />
 
-      {/* Clean Monochrome Vendor Selector */}
+      {/* Horizontal Vendor Selector Rail */}
       <View style={styles.vendorSelectorWrap}>
         <ScrollView
           horizontal
@@ -77,11 +150,15 @@ export default function XurScreen() {
             return (
               <Pressable
                 key={vendor.id}
-                style={[
+                style={({ pressed }) => [
                   styles.vendorPill,
                   isSelected && styles.vendorPillActive,
+                  pressed && !isSelected && styles.vendorPillPressed,
                 ]}
                 onPress={() => handleVendorChange(vendor.id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={`${vendor.name}, ${vendor.subtitle}`}
               >
                 <Text
                   style={[
@@ -98,6 +175,7 @@ export default function XurScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -105,78 +183,143 @@ export default function XurScreen() {
           <RefreshControl
             refreshing={isLoading}
             onRefresh={refreshXurData}
-            tintColor={M.bone}
+            tintColor={M.acid}
           />
         }
       >
-        {/* Compact Vendor Header Banner */}
+        {error ? (
+          <ErrorBanner
+            message="Could not reach Bungie.net right now. Pull to retry or inspect cached offerings."
+            onRetry={refreshXurData}
+          />
+        ) : null}
+
+        {/* Vendor Summary Banner */}
         <View style={styles.vendorBanner}>
           <Image
             source={{ uri: vendorIconUri }}
             style={styles.vendorPortrait}
           />
           <View style={styles.vendorTextCol}>
-            <Text style={styles.vendorName}>{activeVendor.name}</Text>
-            <Text style={styles.vendorSubtitle}>
+            <Text style={styles.vendorName} numberOfLines={1}>
+              {activeVendor.name}
+            </Text>
+            <Text style={styles.vendorSubtitle} numberOfLines={1}>
               {activeVendor.subtitle} · {activeVendor.location}
             </Text>
-            <Text style={styles.vendorTimerLine}>
+            <Text style={styles.vendorTimerLine} numberOfLines={1}>
               {selectedVendorId === 'xur'
                 ? isXurPresent
                   ? 'Leaves in '
                   : 'Arrives in '
-                : 'Rotation resets in '}
+                : 'Resets in '}
               <Text style={styles.vendorTimerValue}>{timeUntilXur}</Text>
             </Text>
           </View>
         </View>
 
-        {/* Class Filter Bar */}
+        {/* Class Filter Chips (>=44px height with class dots & counts) */}
         <View style={styles.classFilterBar}>
           {CLASS_FILTERS.map((cls) => {
             const active = selectedClass === cls;
+            const count = classCounts[cls];
+            const clsColor = cls === 'All' ? M.acid : getClassColor(cls);
+
             return (
               <Pressable
                 key={cls}
-                style={[
+                style={({ pressed }) => [
                   styles.classChip,
-                  active && styles.classChipActive,
+                  active && [
+                    styles.classChipActive,
+                    { borderColor: clsColor },
+                  ],
+                  pressed && !active && styles.classChipPressed,
                 ]}
-                onPress={() => setSelectedClass(cls)}
+                onPress={() => handleClassChange(cls)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={`Filter ${cls}, ${count} items`}
               >
+                <View style={styles.classChipTop}>
+                  {cls !== 'All' ? (
+                    <View
+                      style={[
+                        styles.classDot,
+                        { backgroundColor: clsColor },
+                      ]}
+                    />
+                  ) : null}
+                  <Text
+                    style={[
+                      styles.classChipText,
+                      active && styles.classChipTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {cls}
+                  </Text>
+                </View>
                 <Text
                   style={[
-                    styles.classChipText,
-                    active && styles.classChipTextActive,
+                    styles.classChipCount,
+                    active && { color: clsColor },
                   ]}
                 >
-                  {cls}
+                  {count}
                 </Text>
               </Pressable>
             );
           })}
         </View>
 
-        {/* Helper Hint for Inline Expansion */}
+        {/* Inventory List Header */}
         <View style={styles.listHeaderRow}>
-          <Text style={styles.listHeaderTitle}>
+          <Text style={styles.listHeaderTitle} accessibilityRole="header">
             Inventory ({items.length})
           </Text>
           <Text style={styles.listHeaderHint}>Tap item to inspect</Text>
         </View>
 
-        {/* Inventory Items (Inline Expandable) */}
-        {items.map(([key, item]) => {
-          const isExpanded = expandedKey === key;
-          return (
-            <XurItemCard
-              key={`${selectedVendorId}-${key}-${item.itemHash}`}
-              item={item}
-              expanded={isExpanded}
-              onPress={() => setExpandedKey(isExpanded ? null : key)}
+        {/* Loading Skeletons / Empty State / Inventory List */}
+        {isLoading && allEntries.length === 0 ? (
+          <View style={styles.skeletonStack}>
+            <SkeletonBlock height={88} />
+            <SkeletonBlock height={88} />
+            <SkeletonBlock height={88} />
+            <SkeletonBlock height={88} />
+          </View>
+        ) : items.length === 0 ? (
+          selectedClass !== 'All' ? (
+            <EmptyStateCard
+              icon="filter-off-outline"
+              title={`No ${selectedClass} Gear`}
+              description={`${activeVendor.name} has no ${selectedClass}-specific items in this rotation.`}
+              actionLabel="Show All Classes"
+              onAction={() => handleClassChange('All')}
             />
-          );
-        })}
+          ) : (
+            <EmptyStateCard
+              icon="package-variant"
+              title="No Offerings Loaded"
+              description={`Could not load ${activeVendor.name}'s inventory. Tap below to retry.`}
+              actionLabel="Refresh Inventory"
+              onAction={refreshXurData}
+            />
+          )
+        ) : (
+          items.map(([key, item]) => {
+            const isExpanded = expandedKey === key;
+            return (
+              <XurItemCard
+                key={`${selectedVendorId}-${key}-${item.itemHash}`}
+                item={item}
+                expanded={isExpanded}
+                onPress={() => handleToggleItem(key)}
+              />
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );
@@ -186,27 +329,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: M.void,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    backgroundColor: M.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: M.border,
-  },
-  screenTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: M.bone,
-    letterSpacing: -0.4,
-  },
-  topBarMeta: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: M.ash,
   },
   vendorSelectorWrap: {
     backgroundColor: M.surface,
@@ -219,16 +341,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   vendorPill: {
+    minHeight: 44,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 4,
+    paddingVertical: 10,
+    borderRadius: radii.control,
     backgroundColor: M.void,
     borderWidth: 1,
     borderColor: M.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   vendorPillActive: {
-    backgroundColor: M.bone,
-    borderColor: M.bone,
+    backgroundColor: M.acid,
+    borderColor: M.acid,
+  },
+  vendorPillPressed: {
+    backgroundColor: M.surfaceElevated,
   },
   vendorPillText: {
     fontSize: 14,
@@ -237,7 +365,7 @@ const styles = StyleSheet.create({
   },
   vendorPillTextActive: {
     color: M.void,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   scrollView: {
     flex: 1,
@@ -253,15 +381,16 @@ const styles = StyleSheet.create({
     backgroundColor: M.surface,
     borderWidth: 1,
     borderColor: M.border,
-    borderRadius: 6,
+    borderRadius: radii.card,
     padding: 14,
   },
   vendorPortrait: {
     width: 52,
     height: 52,
-    borderRadius: 4,
+    borderRadius: radii.control,
     borderWidth: 1,
     borderColor: M.borderActive,
+    backgroundColor: M.void,
   },
   vendorTextCol: {
     flex: 1,
@@ -270,6 +399,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: M.bone,
+    letterSpacing: -0.3,
   },
   vendorSubtitle: {
     fontSize: 13,
@@ -286,6 +416,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: M.bone,
+    fontVariant: ['tabular-nums'],
   },
   classFilterBar: {
     flexDirection: 'row',
@@ -295,26 +426,48 @@ const styles = StyleSheet.create({
   },
   classChip: {
     flex: 1,
-    paddingVertical: 8,
+    minHeight: 48,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: M.surface,
     borderWidth: 1,
     borderColor: M.border,
-    borderRadius: 4,
+    borderRadius: radii.control,
+    gap: 2,
   },
   classChipActive: {
     backgroundColor: M.surfaceElevated,
-    borderColor: M.bone,
+  },
+  classChipPressed: {
+    backgroundColor: M.surfaceElevated,
+  },
+  classChipTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  classDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   classChipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: M.ash,
+    color: M.inkSecondary,
   },
   classChipTextActive: {
     color: M.bone,
     fontWeight: '700',
+  },
+  classChipCount: {
+    fontFamily: 'SpaceMono',
+    fontSize: 12,
+    fontWeight: '700',
+    color: M.ash,
+    fontVariant: ['tabular-nums'],
   },
   listHeaderRow: {
     flexDirection: 'row',
@@ -330,5 +483,8 @@ const styles = StyleSheet.create({
   listHeaderHint: {
     fontSize: 12,
     color: M.ash,
+  },
+  skeletonStack: {
+    gap: 10,
   },
 });

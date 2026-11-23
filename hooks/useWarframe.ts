@@ -1,8 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
+import { useIsFocused } from 'expo-router';
 import {
   warframeService,
   WarframeTelemetryState,
 } from '../services/warframe';
+
+function useSafeIsFocused(): boolean {
+  try {
+    return useIsFocused();
+  } catch {
+    return true;
+  }
+}
 
 export interface UseWarframeResult {
   telemetry: WarframeTelemetryState | null;
@@ -13,24 +23,46 @@ export interface UseWarframeResult {
 }
 
 export function useWarframe(): UseWarframeResult {
+  const mountedRef = useRef(true);
+  const reqIdRef = useRef(0);
   const [telemetry, setTelemetry] = useState<WarframeTelemetryState | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState(() => new Date());
+  const isFocused = useSafeIsFocused();
+  const [isAppActive, setIsAppActive] = useState(
+    () => !AppState?.currentState || AppState.currentState === 'active'
+  );
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const loadTelemetry = useCallback(async (force = false) => {
-    try {
+    const reqId = ++reqIdRef.current;
+    if (mountedRef.current) {
       setIsLoading(true);
       setError(null);
+    }
+    try {
       const data = await warframeService.getTelemetry(force);
-      setTelemetry(data);
+      if (mountedRef.current && reqId === reqIdRef.current) {
+        setTelemetry(data);
+      }
     } catch (err) {
       console.error('Warframe telemetry error:', err);
-      setError('ORIGIN SYSTEM RELAY UNREACHABLE');
+      if (mountedRef.current && reqId === reqIdRef.current) {
+        setError('ORIGIN SYSTEM RELAY UNREACHABLE');
+      }
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current && reqId === reqIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -43,11 +75,31 @@ export function useWarframe(): UseWarframeResult {
   }, [loadTelemetry]);
 
   useEffect(() => {
+    return warframeService.subscribeCacheInvalidation(() => {
+      loadTelemetry(false);
+    });
+  }, [loadTelemetry]);
+
+  useEffect(() => {
+    if (typeof AppState?.addEventListener !== 'function') return;
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      setIsAppActive(state === 'active');
+    });
+    return () => {
+      sub?.remove?.();
+    };
+  }, []);
+
+  const isClockActive = isFocused && isAppActive;
+
+  useEffect(() => {
+    if (!isClockActive) return;
+    setNow(new Date());
     const timer = setInterval(() => {
       setNow(new Date());
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isClockActive]);
 
   return {
     telemetry,

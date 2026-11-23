@@ -6,6 +6,32 @@ import manifestSnapshot from '../constants/ManifestSnapshot.json';
 const DEFAULT_BUNGIE_API_KEY = process.env.EXPO_PUBLIC_BUNGIE_API_KEY || '';
 const BUNGIE_BASE = 'https://www.bungie.net/Platform';
 const SNAPSHOT_MAP: Record<string, any> = manifestSnapshot as any;
+export const DEFAULT_FETCH_TIMEOUT_MS = 10_000;
+
+export async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = DEFAULT_FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const controller =
+    typeof AbortController !== 'undefined' ? new AbortController() : null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  if (controller && timeoutMs > 0) {
+    timer = setTimeout(() => controller.abort(), timeoutMs);
+  }
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: options.signal ?? controller?.signal,
+    });
+  } finally {
+    if (timer !== null) {
+      clearTimeout(timer);
+    }
+  }
+}
 
 // Bungie global reset is 17:00 UTC every Friday (arrival) and Tuesday (departure)
 const XUR_RESET_UTC_HOUR = 17;
@@ -316,7 +342,7 @@ const RARITY_BY_TIER: Record<number, string> = {
   2: 'Common',
 };
 
-const EXCLUDED_NAV_ITEMS = [
+const EXCLUDED_NAV_EXACT = new Set([
   'more strange offers',
   'strange gear offers',
   'more strange gear',
@@ -324,18 +350,57 @@ const EXCLUDED_NAV_ITEMS = [
   'reset rank',
   'xûr',
   'gunsmith',
-];
+]);
+
+function isExcludedNavItem(name: string): boolean {
+  return EXCLUDED_NAV_EXACT.has(name.trim().toLowerCase());
+}
+
+const VENDOR_CACHE_TTL_MS = 5 * 60 * 1000;
+const PERK_FETCH_BATCH_SIZE = 6;
 
 class ApiService {
   private itemCache = new Map<number, any>();
-  private vendorCache = new Map<DestinyVendorId, XurData>();
-  private pendingVendor = new Map<DestinyVendorId, Promise<ApiResponse<XurData>>>();
+  private vendorCache = new Map<
+    DestinyVendorId,
+    { data: XurData; expiresAt: number }
+  >();
+  private pendingVendor = new Map<
+    DestinyVendorId,
+    Promise<ApiResponse<XurData>>
+  >();
+  private cacheGeneration = 0;
+  private vendorGenerations = new Map<DestinyVendorId, number>();
+  private cacheListeners = new Set<() => void>();
   private customApiKey: string | null = null;
+
+  subscribeCacheInvalidation(cb: () => void): () => void {
+    this.cacheListeners.add(cb);
+    return () => {
+      this.cacheListeners.delete(cb);
+    };
+  }
+
+  private notifyCacheInvalidation() {
+    this.cacheListeners.forEach((cb) => {
+      try {
+        cb();
+      } catch {
+        // Isolate subscriber errors
+      }
+    });
+  }
+
+  clearCache() {
+    this.cacheGeneration += 1;
+    this.vendorCache.clear();
+    this.pendingVendor.clear();
+    this.notifyCacheInvalidation();
+  }
 
   setApiKey(key: string) {
     this.customApiKey = key.trim() || null;
-    this.vendorCache.clear();
-    this.pendingVendor.clear();
+    this.clearCache();
   }
 
   getApiKey(): string {
@@ -345,7 +410,7 @@ class ApiService {
   private async fetchBungie<T = any>(endpoint: string): Promise<T | null> {
     const url = `${BUNGIE_BASE}${endpoint}`;
     try {
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         method: 'GET',
         headers: {
           'X-API-Key': this.getApiKey(),
@@ -414,8 +479,8 @@ class ApiService {
     for (const [key, statObj] of Object.entries<any>(rawStats)) {
       const hash = Number(key);
       const name = STAT_NAMES[hash];
-      const val = statObj?.value ?? 0;
-      if (name && val > 0) {
+      const val = statObj?.value;
+      if (name && typeof val === 'number' && Number.isFinite(val) && val > 0) {
         stats.push({
           hash,
           name,
@@ -425,24 +490,6 @@ class ApiService {
       }
     }
 
-    // For armor pieces where static stats are 0 in the public manifest, provide base armor archetype stats
-    if (stats.length === 0 && isStatArmor) {
-      const seed = Number(itemDef?.hash || 1000);
-      const mob = 8 + (seed % 14);
-      const res = 10 + ((seed >> 3) % 16);
-      const rec = 9 + ((seed >> 6) % 15);
-      const dis = 8 + ((seed >> 9) % 14);
-      const int = 6 + ((seed >> 12) % 12);
-      const str = 7 + ((seed >> 15) % 13);
-      return [
-        { hash: 2996146975, name: 'Mobility', value: mob, maximum: 30 },
-        { hash: 392767087, name: 'Resilience', value: res, maximum: 30 },
-        { hash: 1943323491, name: 'Recovery', value: rec, maximum: 30 },
-        { hash: 1735777505, name: 'Discipline', value: dis, maximum: 30 },
-        { hash: 144602215, name: 'Intellect', value: int, maximum: 30 },
-        { hash: 4244567218, name: 'Strength', value: str, maximum: 30 },
-      ];
-    }
     return stats.slice(0, 6);
   }
 
@@ -454,88 +501,109 @@ class ApiService {
     let rollType: 'curated' | 'random' | undefined;
     const isWeapon = this.isWeaponDef(itemDef);
 
+    const plugHashes: number[] = [];
+    const seenPlugHashes = new Set<number>();
     for (const entry of socketEntries) {
       const plugHash = entry?.singleInitialItemHash;
-      if (!plugHash) continue;
-      if (perks.length >= 6) break;
-      const plugDef = await this.getItemDefinition(plugHash);
-      if (!plugDef) continue;
-      const name: string = plugDef?.displayProperties?.name || '';
-      const desc: string = plugDef?.displayProperties?.description || '';
-      const tierType: number = plugDef?.inventory?.tierType || 0;
-      const itemTypeDisplayName: string = plugDef?.itemTypeDisplayName || '';
-      const plugCat: string = plugDef?.plug?.plugCategoryIdentifier || '';
-
-      if (
-        !name ||
-        name.includes('Empty') ||
-        name.includes('Default') ||
-        name.includes('Upgrade') ||
-        name.includes('Tracker') ||
-        name.includes('Socket') ||
-        name.includes('Tier ')
-      ) {
-        continue;
+      if (plugHash && !seenPlugHashes.has(plugHash)) {
+        seenPlugHashes.add(plugHash);
+        plugHashes.push(plugHash);
       }
+    }
 
-      if (name === 'Randomized Perks') {
-        rollType = 'random';
-        perks.push({
-          hash: plugHash,
-          name: 'Random Roll on Purchase',
-          slot: 'Vendor Roll',
-          description:
-            'Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.',
-          icon: plugDef?.displayProperties?.icon || '',
-          isExotic: false,
-        });
-        continue;
-      }
+    for (
+      let i = 0;
+      i < plugHashes.length && perks.length < 6;
+      i += PERK_FETCH_BATCH_SIZE
+    ) {
+      const batch = plugHashes.slice(i, i + PERK_FETCH_BATCH_SIZE);
+      const defs = await Promise.all(
+        batch.map((hash) => this.getItemDefinition(hash))
+      );
 
-      const isWeaponPerkSocket =
-        isWeapon &&
-        (plugCat.includes('intrinsics') ||
-          plugCat.includes('barrels') ||
-          plugCat.includes('tubes') ||
-          plugCat.includes('bowstrings') ||
-          plugCat.includes('blades') ||
-          plugCat.includes('scopes') ||
-          plugCat.includes('magazines') ||
-          plugCat.includes('batteries') ||
-          plugCat.includes('arrows') ||
-          plugCat.includes('guards') ||
-          plugCat.includes('frames') ||
-          plugCat.includes('origins') ||
-          plugCat.includes('grips') ||
-          plugCat.includes('stocks') ||
-          itemTypeDisplayName.includes('Trait') ||
-          itemTypeDisplayName.includes('Intrinsic'));
+      for (let j = 0; j < batch.length && perks.length < 6; j++) {
+        const plugHash = batch[j];
+        const plugDef = defs[j];
+        if (!plugDef) continue;
 
-      const isExoticOrArmorPerk =
-        !isWeapon &&
-        (tierType === 6 ||
-          itemTypeDisplayName.includes('Intrinsic') ||
-          desc.length > 25);
+        const name: string = plugDef?.displayProperties?.name || '';
+        const desc: string = plugDef?.displayProperties?.description || '';
+        const tierType: number = plugDef?.inventory?.tierType || 0;
+        const itemTypeDisplayName: string = plugDef?.itemTypeDisplayName || '';
+        const plugCat: string = plugDef?.plug?.plugCategoryIdentifier || '';
 
-      if (isWeaponPerkSocket || isExoticOrArmorPerk) {
         if (
+          !name ||
+          name.includes('Empty') ||
+          name.includes('Default') ||
+          name.includes('Upgrade') ||
+          name.includes('Tracker') ||
+          name.includes('Socket') ||
+          name.includes('Tier ')
+        ) {
+          continue;
+        }
+
+        if (name === 'Randomized Perks') {
+          rollType = 'random';
+          perks.push({
+            hash: plugHash,
+            name: 'Random Roll on Purchase',
+            slot: 'Vendor Roll',
+            description:
+              'Weapon traits, barrel, and magazine are rolled randomly when acquired or focused from this vendor.',
+            icon: plugDef?.displayProperties?.icon || '',
+            isExotic: false,
+          });
+          continue;
+        }
+
+        const isWeaponPerkSocket =
           isWeapon &&
-          (itemTypeDisplayName === 'Trait' ||
+          (plugCat.includes('intrinsics') ||
             plugCat.includes('barrels') ||
             plugCat.includes('tubes') ||
-            plugCat.includes('magazines'))
-        ) {
-          rollType = 'curated';
+            plugCat.includes('bowstrings') ||
+            plugCat.includes('blades') ||
+            plugCat.includes('scopes') ||
+            plugCat.includes('magazines') ||
+            plugCat.includes('batteries') ||
+            plugCat.includes('arrows') ||
+            plugCat.includes('guards') ||
+            plugCat.includes('frames') ||
+            plugCat.includes('origins') ||
+            plugCat.includes('grips') ||
+            plugCat.includes('stocks') ||
+            itemTypeDisplayName.includes('Trait') ||
+            itemTypeDisplayName.includes('Intrinsic'));
+
+        const isExoticOrArmorPerk =
+          !isWeapon &&
+          (tierType === 6 ||
+            itemTypeDisplayName.includes('Intrinsic') ||
+            desc.length > 25);
+
+        if (isWeaponPerkSocket || isExoticOrArmorPerk) {
+          if (
+            isWeapon &&
+            (itemTypeDisplayName === 'Trait' ||
+              plugCat.includes('barrels') ||
+              plugCat.includes('tubes') ||
+              plugCat.includes('magazines'))
+          ) {
+            rollType = 'curated';
+          }
+          perks.push({
+            hash: plugHash,
+            name,
+            slot: itemTypeDisplayName || 'Intrinsic',
+            description: desc,
+            icon: plugDef?.displayProperties?.icon || '',
+            isExotic:
+              tierType === 6 || itemTypeDisplayName.includes('Intrinsic'),
+            isEquipped: true,
+          });
         }
-        perks.push({
-          hash: plugHash,
-          name,
-          slot: itemTypeDisplayName || 'Intrinsic',
-          description: desc,
-          icon: plugDef?.displayProperties?.icon || '',
-          isExotic: tierType === 6 || itemTypeDisplayName.includes('Intrinsic'),
-          isEquipped: true,
-        });
       }
     }
     return { perks, rollType };
@@ -549,11 +617,21 @@ class ApiService {
   ): Promise<XurInventoryItem | null> {
     const snap = SNAPSHOT_MAP[String(itemHash)];
     if (snap) {
-      const lower = (snap.name || '').toLowerCase();
-      if (EXCLUDED_NAV_ITEMS.some((ex) => lower === ex || lower.includes(ex))) {
+      if (isExcludedNavItem(snap.name || '')) {
         return null;
       }
       const classType = snap.classType ?? 3;
+      const stats: ItemStat[] = this.isStatArmorDef(snap)
+        ? []
+        : Array.isArray(snap.stats)
+        ? snap.stats.filter(
+            (s: any) =>
+              s &&
+              typeof s.value === 'number' &&
+              Number.isFinite(s.value) &&
+              s.value > 0
+          )
+        : [];
       return {
         vendorItemIndex,
         itemHash,
@@ -568,7 +646,7 @@ class ApiService {
         supportedClasses: this.getSupportedClasses(classType),
         flavorText: snap.flavorText || '',
         perks: snap.perks || [],
-        stats: Array.isArray(snap.stats) ? snap.stats : [],
+        stats,
         rollType: snap.rollType,
         categoryLabel,
       };
@@ -581,8 +659,7 @@ class ApiService {
     const name: string = dp.name || '';
     if (!name) return null;
 
-    const lower = name.toLowerCase();
-    if (EXCLUDED_NAV_ITEMS.some((ex) => lower === ex || lower.includes(ex))) {
+    if (isExcludedNavItem(name)) {
       return null;
     }
 
@@ -621,29 +698,46 @@ class ApiService {
     vendorId: DestinyVendorId = 'xur',
     forceRefresh = false
   ): Promise<ApiResponse<XurData>> {
-    if (!forceRefresh && this.vendorCache.has(vendorId)) {
-      return {
-        Response: this.vendorCache.get(vendorId)!,
-        ErrorCode: 0,
-        ThrottleSeconds: 0,
-      };
+    if (!forceRefresh) {
+      const cached = this.vendorCache.get(vendorId);
+      if (cached && Date.now() < cached.expiresAt) {
+        return {
+          Response: cached.data,
+          ErrorCode: 0,
+          ThrottleSeconds: 0,
+        };
+      }
+      if (cached) {
+        this.vendorCache.delete(vendorId);
+      }
+
+      const existingPending = this.pendingVendor.get(vendorId);
+      if (existingPending) {
+        return existingPending;
+      }
+    } else {
+      const nextVendorGen = (this.vendorGenerations.get(vendorId) ?? 0) + 1;
+      this.vendorGenerations.set(vendorId, nextVendorGen);
     }
 
-    if (!forceRefresh && this.pendingVendor.has(vendorId)) {
-      return this.pendingVendor.get(vendorId)!;
-    }
+    const globalGen = this.cacheGeneration;
+    const vendorGen = this.vendorGenerations.get(vendorId) ?? 0;
 
-    const promise = this.loadVendorInventory(vendorId);
+    const promise = this.loadVendorInventory(vendorId, globalGen, vendorGen);
     this.pendingVendor.set(vendorId, promise);
     try {
       return await promise;
     } finally {
-      this.pendingVendor.delete(vendorId);
+      if (this.pendingVendor.get(vendorId) === promise) {
+        this.pendingVendor.delete(vendorId);
+      }
     }
   }
 
   private async loadVendorInventory(
-    vendorId: DestinyVendorId
+    vendorId: DestinyVendorId,
+    globalGen: number,
+    vendorGen: number
   ): Promise<ApiResponse<XurData>> {
     const meta =
       DESTINY_VENDORS.find((v) => v.id === vendorId) || DESTINY_VENDORS[0];
@@ -685,7 +779,8 @@ class ApiService {
               vendor: {
                 vendorHash: Number(meta.hash),
                 nextRefreshDate:
-                  vendorInfo?.nextRefreshDate || new Date().toISOString(),
+                  vendorInfo?.nextRefreshDate ||
+                  getNextXurResetUtc().toISOString(),
                 enabled: true,
                 name: meta.name,
                 subtitle: meta.subtitle,
@@ -698,13 +793,21 @@ class ApiService {
               isLiveApi: true,
               message: 'LIVE TELEMETRY // BUNGIE.NET PLATFORM',
             };
-            this.vendorCache.set(vendorId, xurData);
+            if (
+              this.cacheGeneration === globalGen &&
+              (this.vendorGenerations.get(vendorId) ?? 0) === vendorGen
+            ) {
+              this.vendorCache.set(vendorId, {
+                data: xurData,
+                expiresAt: Date.now() + VENDOR_CACHE_TTL_MS,
+              });
+            }
             return { Response: xurData, ErrorCode: 0, ThrottleSeconds: 0 };
           }
         }
       }
 
-      // For Banshee-44, Ada-1, Saint-14, Saladin (or if Xûr sales are rotating), hydrate from live Bungie Manifest definitions
+      // Curated local manifest snapshot fallback (do not permanently cache offline fallback results)
       const hydratedCurated = await Promise.all(
         meta.curatedHashes.map((entry, idx) =>
           this.hydrateSaleItem(
@@ -731,37 +834,56 @@ class ApiService {
         }
       });
 
-      if (Object.keys(saleItems).length > 0) {
-        const vendorData: XurData = {
-          vendor: {
-            vendorHash: Number(meta.hash),
-            nextRefreshDate: new Date().toISOString(),
-            enabled: true,
-            name: meta.name,
-            subtitle: meta.subtitle,
-            description: meta.description,
-            location: meta.location,
-            icon: meta.icon,
-          },
-          sales: { saleItems },
-          isAvailable: true,
-          isLiveApi: true,
-          message: 'MANIFEST TELEMETRY // BUNGIE.NET VERIFIED',
-        };
-        this.vendorCache.set(vendorId, vendorData);
-        return { Response: vendorData, ErrorCode: 0, ThrottleSeconds: 0 };
-      }
+      const snapshotData: XurData = {
+        vendor: {
+          vendorHash: Number(meta.hash),
+          nextRefreshDate:
+            vendorId === 'xur'
+              ? getNextXurResetUtc().toISOString()
+              : new Date().toISOString(),
+          enabled: true,
+          name: meta.name,
+          subtitle: meta.subtitle,
+          description: meta.description,
+          location: meta.location,
+          icon: meta.icon,
+        },
+        sales: { saleItems },
+        isAvailable: vendorId === 'xur' ? isXurActiveUtc() : true,
+        isLiveApi: false,
+        message:
+          vendorId === 'xur'
+            ? 'OFFLINE SNAPSHOT // LOCAL MANIFEST ARCHIVE'
+            : 'LOCAL SNAPSHOT // CURATED MANIFEST ARCHIVE',
+      };
+      return { Response: snapshotData, ErrorCode: 0, ThrottleSeconds: 0 };
     } catch (e) {
       console.warn('Bungie API fallback triggered:', e);
     }
 
-    // Offline / Maintenance Fallback Snapshot so the APK never shows an empty or broken state
-    const fallbackData = this.getFallbackVendorData(meta);
-    return { Response: fallbackData, ErrorCode: 0, ThrottleSeconds: 0 };
-  }
-
-  async getXurInventory(forceRefresh = false): Promise<ApiResponse<XurData>> {
-    return this.getVendorInventory('xur', forceRefresh);
+    return {
+      Response: {
+        vendor: {
+          vendorHash: Number(meta.hash),
+          nextRefreshDate:
+            vendorId === 'xur'
+              ? getNextXurResetUtc().toISOString()
+              : new Date().toISOString(),
+          enabled: true,
+          name: meta.name,
+          subtitle: meta.subtitle,
+          description: meta.description,
+          location: meta.location,
+          icon: meta.icon,
+        },
+        sales: { saleItems: {} },
+        isAvailable: vendorId === 'xur' ? isXurActiveUtc() : false,
+        isLiveApi: false,
+        message: 'OFFLINE SNAPSHOT // TELEMETRY UNAVAILABLE',
+      },
+      ErrorCode: 0,
+      ThrottleSeconds: 0,
+    };
   }
 
   async testConnection(): Promise<{
@@ -771,99 +893,21 @@ class ApiService {
     latencyMs: number;
   }> {
     const start = Date.now();
-    try {
-      const [bungieRes, wfRes] = await Promise.all([
-        this.fetchBungie('/Destiny2/Manifest/'),
-        fetch('https://api.warframestat.us/pc/cetusCycle').then((r) => r.ok),
-      ]);
-      return {
-        success: Boolean(bungieRes) || Boolean(wfRes),
-        bungieOk: Boolean(bungieRes),
-        warframeOk: Boolean(wfRes),
-        latencyMs: Date.now() - start,
-      };
-    } catch {
-      return {
-        success: false,
-        bungieOk: false,
-        warframeOk: false,
-        latencyMs: Date.now() - start,
-      };
-    }
-  }
-
-  private getFallbackVendorData(meta: VendorMeta): XurData {
-    const fallbackItems: Record<string, XurInventoryItem> = {
-      '0': {
-        vendorItemIndex: 0,
-        itemHash: 3158812152,
-        quantity: 1,
-        costs: [{ itemHash: 800069450, quantity: 97, hasConditionalVisibility: false }],
-        itemName: 'The Xûrfboard',
-        itemDescription: 'Exotic Skimmer Vehicle — Surf the cosmic currents of the Nine.',
-        itemTypeDisplayName: 'Exotic Vehicle',
-        itemIcon: '/common/destiny2_content/icons/0f9ed83ab7bbe0282f9974c62f930cf4.jpg',
-        rarity: 'Exotic',
-        classType: 3,
-        supportedClasses: ['Titan', 'Hunter', 'Warlock'],
-        flavorText: 'Ride theparacausal wave.',
-        perks: [
-          {
-            hash: 1,
-            name: 'Paracausal Thrusters',
-            slot: 'Intrinsic',
-            description: 'Enables rail-grinding and extended aerial stabilization in all combat zones.',
-            icon: '/common/destiny2_content/icons/0f9ed83ab7bbe0282f9974c62f930cf4.jpg',
-            isExotic: true,
-          },
-        ],
-        stats: [],
-      },
-      '1': {
-        vendorItemIndex: 12,
-        itemHash: 3721047650,
-        quantity: 1,
-        costs: [{ itemHash: 800069450, quantity: 41, hasConditionalVisibility: false }],
-        itemName: 'Wormhusk Crown',
-        itemDescription: 'Exotic Hunter Helmet — Dodging gives a small health and shield bump.',
-        itemTypeDisplayName: 'Exotic Helmet',
-        itemIcon: '/common/destiny2_content/icons/9c2eda96877ed53dceb90568ebb27f11.png',
-        rarity: 'Exotic',
-        classType: 1,
-        supportedClasses: ['Hunter'],
-        flavorText: 'Hold fast to the flesh of the hive gods.',
-        perks: [
-          {
-            hash: 3723531833,
-            name: 'Burning Souls',
-            description: 'Activating your class ability grants Cure and immediate shield regeneration.',
-            icon: '/common/destiny2_content/icons/9c2eda96877ed53dceb90568ebb27f11.png',
-            isExotic: true,
-          },
-        ],
-        stats: [
-          { hash: 2996146975, name: 'Mobility', value: 18, maximum: 30 },
-          { hash: 392767087, name: 'Resilience', value: 14, maximum: 30 },
-          { hash: 1943323491, name: 'Recovery', value: 12, maximum: 30 },
-        ],
-      },
-    };
-
+    const [bungieRes, wfRes] = await Promise.all([
+      this.fetchBungie('/Destiny2/Manifest/').catch(() => null),
+      fetchWithTimeout('https://api.warframestat.us/pc/cetusCycle', {
+        headers: { Accept: 'application/json' },
+      })
+        .then((r) => r.ok)
+        .catch(() => false),
+    ]);
+    const bungieOk = Boolean(bungieRes);
+    const warframeOk = Boolean(wfRes);
     return {
-      vendor: {
-        vendorHash: Number(meta.hash),
-        nextRefreshDate: new Date().toISOString(),
-        enabled: true,
-        name: meta.name,
-        subtitle: meta.subtitle,
-        description: meta.description,
-        location: meta.location,
-        icon: meta.icon,
-      },
-      sales: { saleItems: fallbackItems },
-      isAvailable: true,
-      isLiveApi: false,
-      message: 'CACHED SNAPSHOT // OFFLINE ARCHIVE',
+      success: bungieOk || warframeOk,
+      bungieOk,
+      warframeOk,
+      latencyMs: Date.now() - start,
     };
   }
 }

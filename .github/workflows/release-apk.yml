@@ -9,12 +9,16 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Tag version for GitHub Release (e.g. v2.0.0)'
+        description: 'Tag version for GitHub Release (defaults to v<package.json version>)'
         required: false
-        default: 'v2.0.0'
+        default: ''
 
 permissions:
   contents: write
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
   build-android-apk:
@@ -27,32 +31,52 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Setup Java 17 (Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-37 build-tools;37.0.0 ndk;27.1.12297006'
 
       - name: Setup Gradle Cache
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Resolve Release Metadata
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          if [ "$REF_TYPE" = "tag" ]; then
+            TAG="$REF_NAME"
+          elif [ -n "$INPUT_RELEASE_TAG" ]; then
+            TAG="$INPUT_RELEASE_TAG"
+          else
+            TAG="v$(node -p "require('./package.json').version")"
+          fi
+          echo "RELEASE_TAG=${TAG}" >> "$GITHUB_ENV"
+          echo "APK_FILENAME=orbit-market-${TAG}.apk" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=orbit-market-${TAG}-apk" >> "$GITHUB_ENV"
+          echo "Resolved release tag: ${TAG}"
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: TypeScript & Unit Test Verification
         run: |
-          ./node_modules/.bin/tsc --noEmit
+          npx tsc --noEmit
           npm test
 
       - name: Generate Android Native Project (Expo Prebuild)
@@ -60,39 +84,43 @@ jobs:
 
       - name: Build Standalone Release APK
         working-directory: ./android
-        run: ./gradlew assembleRelease --no-daemon
-
-      - name: Rename APK for Release
+        env:
+          GRADLE_OPTS: -Xmx4096m -XX:MaxMetaspaceSize=1024m
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk orbit-market-v2.0.0.apk
-          ls -lh orbit-market-v2.0.0.apk
+          ./gradlew assembleRelease --no-daemon \
+            -Dorg.gradle.jvmargs="-Xmx4096m -XX:MaxMetaspaceSize=1024m" \
+            -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - name: Prepare Release APK
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk "${APK_FILENAME}"
+          ls -lh "${APK_FILENAME}"
 
       - name: Upload APK as Workflow Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: orbit-market-v2.0.0-apk
-          path: orbit-market-v2.0.0.apk
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.APK_FILENAME }}
           if-no-files-found: error
 
       - name: Publish APK to GitHub Releases
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag || 'v2.0.0' }}
-          name: "Orbit Market v2.0.0 // UESC Telemetry Terminal (Marathon Edition)"
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: "Orbit Market ${{ env.RELEASE_TAG }} — Android APK"
           body: |
-            ## ORBIT MARKET v2.0.0 — STANDALONE ANDROID APK
-            **Tactical Companion for Destiny 2 & Warframe** (*Bungie Marathon 2025 Graphic Realism UI*)
+            ## ORBIT MARKET ${{ env.RELEASE_TAG }} — STANDALONE ANDROID APK
+            **Tactical Companion for Destiny 2 & Warframe**
 
             ### What's Included
             - **100% Autonomous Client**: Connects directly to Bungie.net Platform API & WarframeStat.us WorldState API with embedded Destiny 2 Manifest snapshot (`constants/ManifestSnapshot.json`).
-            - **Destiny 2 (5 Vendors)**: Xûr (live public sales + Exotic perks & segmented stats), Banshee-44, Ada-1, Saint-14 (Trials of Osiris), and Valus Saladin (Iron Banner).
-            - **Warframe WorldState**: Live 1Hz Open-World cycle timers (Cetus, Orb Vallis, Cambion Drift, Zariman, Duviri), Baro Ki'Teer Void Trader inventory, Void Fissures, Invasions, Daily Sortie, Archon Hunt & Nightwave.
+            - **Destiny 2 (5 Vendors)**: Xûr (live public sales + Exotic perks & stats), Banshee-44, Ada-1, Saint-14 (Trials of Osiris), and Valus Saladin (Iron Banner).
+            - **Warframe WorldState**: Live Open-World cycle timers (Cetus, Orb Vallis, Cambion Drift, Zariman, Duviri), Baro Ki'Teer Void Trader inventory, Void Fissures, Invasions, Daily Sortie, Archon Hunt & Nightwave.
 
             ### Installation (Android)
-            1. Download **`orbit-market-v2.0.0.apk`** below on your Android device.
+            1. Download **`${{ env.APK_FILENAME }}`** below on your Android device (`arm64-v8a` / `armeabi-v7a`).
             2. Open the file and allow installation from your browser if prompted.
-          files: orbit-market-v2.0.0.apk
+          files: ${{ env.APK_FILENAME }}
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}

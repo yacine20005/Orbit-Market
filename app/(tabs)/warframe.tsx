@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -7,30 +7,94 @@ import {
   View,
   Text,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '@/constants/Colors';
+import Colors, {
+  radii,
+  spacing,
+  withAlpha,
+  getCycleVisual,
+  getFissureTierColor,
+} from '@/constants/Colors';
 import { useWarframe } from '@/hooks/useWarframe';
 import { formatRemainingTime } from '@/services/warframe';
 import {
+  ScreenHeader,
   SectionBarcodeHeader,
   StatusPill,
+  SkeletonBlock,
+  ErrorBanner,
+  EmptyStateCard,
 } from '@/components/MarathonPrimitives';
 
 const M = Colors.marathon;
 
 type WarframeSection = 'cycles' | 'baro' | 'fissures' | 'ops';
+type FissureModeFilter = 'all' | 'standard' | 'steel' | 'storm';
 
 const SECTIONS: Array<{ id: WarframeSection; label: string }> = [
   { id: 'cycles', label: 'Cycles' },
-  { id: 'baro', label: "Baro Ki'Teer" },
+  { id: 'baro', label: 'Baro' },
   { id: 'fissures', label: 'Fissures' },
-  { id: 'ops', label: 'Sortie' },
+  { id: 'ops', label: 'Endgame' },
 ];
+
+const FISSURE_MODES: Array<{
+  id: FissureModeFilter;
+  label: string;
+  dotColor?: string;
+}> = [
+  { id: 'all', label: 'All' },
+  { id: 'standard', label: 'Standard', dotColor: M.cyan },
+  { id: 'steel', label: 'Steel Path', dotColor: M.vermilion },
+  { id: 'storm', label: 'Void Storm', dotColor: M.violet },
+];
+
+function getCountdownDisplay(
+  expiry: string | undefined,
+  now: Date
+): { text: string; isUpdating: boolean } {
+  if (!expiry) {
+    return { text: 'Updating', isUpdating: true };
+  }
+  const formatted = formatRemainingTime(expiry, now);
+  if (formatted === 'ROTATING' || formatted === 'SYNCING') {
+    return { text: 'Updating', isUpdating: true };
+  }
+  return { text: formatted, isUpdating: false };
+}
+
+function formatZoneLabel(zone: string): string {
+  return zone
+    .split('//')
+    .map((part) => {
+      const trimmed = part.trim();
+      if (!trimmed) return '';
+      return trimmed
+        .toLowerCase()
+        .replace(/\b\w/g, (ch) => ch.toUpperCase());
+    })
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function getFactionColor(faction?: string): string {
+  const key = (faction || '').toLowerCase();
+  if (key.includes('grineer')) return M.vermilion;
+  if (key.includes('corpus')) return M.cyan;
+  if (key.includes('infest')) return M.emerald;
+  if (key.includes('orokin') || key.includes('corrupted') || key.includes('narmer')) {
+    return M.amber;
+  }
+  return M.violet;
+}
 
 export default function WarframeScreen() {
   const insets = useSafeAreaInsets();
-  const { telemetry, isLoading, now, refreshTelemetry } = useWarframe();
+  const { telemetry, isLoading, error, now, refreshTelemetry } = useWarframe();
   const [activeSection, setActiveSection] = useState<WarframeSection>('cycles');
+  const [fissureMode, setFissureMode] = useState<FissureModeFilter>('all');
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   const cycles = telemetry?.cycles || [];
   const voidTrader = telemetry?.voidTrader;
@@ -41,34 +105,105 @@ export default function WarframeScreen() {
   const archon = telemetry?.archonHunt;
   const nightwave = telemetry?.nightwave;
 
+  const handleSelectSection = (section: WarframeSection) => {
+    setActiveSection(section);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  };
+
+  const fissureCounts = useMemo(() => {
+    let standard = 0;
+    let steel = 0;
+    let storm = 0;
+    for (const f of fissures) {
+      if (f.isHard) steel += 1;
+      if (f.isStorm) storm += 1;
+      if (!f.isHard && !f.isStorm) standard += 1;
+    }
+    return {
+      all: fissures.length,
+      standard,
+      steel,
+      storm,
+    };
+  }, [fissures]);
+
+  const filteredFissures = useMemo(() => {
+    switch (fissureMode) {
+      case 'standard':
+        return fissures.filter((f) => !f.isHard && !f.isStorm);
+      case 'steel':
+        return fissures.filter((f) => f.isHard);
+      case 'storm':
+        return fissures.filter((f) => f.isStorm);
+      default:
+        return fissures;
+    }
+  }, [fissures, fissureMode]);
+
+  const activeModeLabel =
+    FISSURE_MODES.find((m) => m.id === fissureMode)?.label || 'Selected';
+
+  const headerStatus = useMemo(() => {
+    if (isLoading && !telemetry) {
+      return { label: 'Syncing', color: M.ash, dot: false };
+    }
+    if (telemetry?.isLive) {
+      return { label: 'Live Sync', color: M.emerald, dot: true };
+    }
+    if (telemetry) {
+      return { label: 'Snapshot', color: M.amber, dot: true };
+    }
+    return { label: 'Offline', color: M.vermilion, dot: true };
+  }, [isLoading, telemetry]);
+
+  const isInitialLoad = isLoading && !telemetry;
+
+  const baroCountdown = voidTrader
+    ? getCountdownDisplay(
+        voidTrader.active ? voidTrader.expiry : voidTrader.activation,
+        now
+      )
+    : { text: 'Updating', isUpdating: true };
+
+  const sortieCountdown = getCountdownDisplay(sortie?.expiry, now);
+  const archonCountdown = getCountdownDisplay(archon?.expiry, now);
+
+  const hasEndgameContent =
+    Boolean(sortie && sortie.variants.length > 0) ||
+    Boolean(archon && archon.missions.length > 0) ||
+    Boolean(nightwave && nightwave.challenges.length > 0);
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Top Bar */}
-      <View style={styles.topBar}>
-        <Text style={styles.screenTitle}>Warframe · WorldState</Text>
-        <Text style={styles.topBarMeta}>
-          {telemetry?.isLive ? 'Live Sync' : 'Cached'}
-        </Text>
-      </View>
+      <ScreenHeader
+        title="Warframe"
+        statusLabel={headerStatus.label}
+        statusColor={headerStatus.color}
+        statusDot={headerStatus.dot}
+      />
 
-      {/* 4 Clean Equal-Width Section Tabs */}
-      <View style={styles.tabRow}>
+      {/* 4 Equal-Width Sub-Tabs (>=44px touch height, crisp short labels) */}
+      <View style={styles.tabRow} accessibilityRole="tablist">
         {SECTIONS.map((sec) => {
           const active = activeSection === sec.id;
           return (
             <Pressable
               key={sec.id}
-              style={[
+              style={({ pressed }) => [
                 styles.tabBtn,
                 active && styles.tabBtnActive,
+                pressed && styles.pressed,
               ]}
-              onPress={() => setActiveSection(sec.id)}
+              onPress={() => handleSelectSection(sec.id)}
+              accessibilityRole="tab"
+              accessibilityLabel={`${sec.label} tab`}
+              accessibilityState={{ selected: active }}
             >
               <Text
-                style={[
-                  styles.tabBtnText,
-                  active && styles.tabBtnTextActive,
-                ]}
+                style={[styles.tabBtnText, active && styles.tabBtnTextActive]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.85}
               >
                 {sec.label}
               </Text>
@@ -78,383 +213,747 @@ export default function WarframeScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading}
+            refreshing={isLoading && Boolean(telemetry)}
             onRefresh={refreshTelemetry}
-            tintColor={M.bone}
+            tintColor={M.acid}
           />
         }
       >
-        {/* SECTION 1: OPEN WORLD CYCLES */}
-        {activeSection === 'cycles' && (
-          <View>
-            <SectionBarcodeHeader
-              title="Open World Cycles"
-              subtitle="Live environmental rotations across 5 zones"
-            />
+        {error ? (
+          <ErrorBanner
+            message="Unable to reach Warframe WorldState relay. Showing latest available data."
+            onRetry={refreshTelemetry}
+          />
+        ) : null}
 
-            <View style={styles.boardCard}>
-              {cycles.map((cycle, index) => {
-                const liveCountdown = cycle.expiry
-                  ? formatRemainingTime(cycle.expiry, now)
-                  : cycle.timeLeft || 'LIVE';
-
-                return (
-                  <View
-                    key={cycle.id}
-                    style={[
-                      styles.cycleRow,
-                      index === cycles.length - 1 && { borderBottomWidth: 0 },
-                    ]}
-                  >
-                    <View style={styles.cycleInfo}>
-                      <Text style={styles.cycleTitle}>{cycle.name}</Text>
-                      <Text style={styles.cycleSubtitle}>
-                        {cycle.zone.replace(' // ', ' · ')}
-                      </Text>
-                    </View>
-
-                    <View style={styles.cycleStatusCol}>
-                      <Text style={styles.cycleStateText}>{cycle.state}</Text>
-                      <Text style={styles.cycleCountdown}>{liveCountdown}</Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-
-            {/* Active Tactical Alerts */}
-            <View style={styles.subSection}>
-              <SectionBarcodeHeader
-                title="Tactical Alerts & Events"
-                subtitle="High-priority Lotus directives"
-                rightText={`${alerts.length} Active`}
-              />
-
-              {alerts.length === 0 ? (
-                <View style={styles.emptyCard}>
-                  <Text style={styles.emptyTitle}>
-                    No Special Alerts Active
-                  </Text>
-                  <Text style={styles.emptyDesc}>
-                    Check Fissures or Sortie tabs for active Void Relics,
-                    Invasions, and daily endgame missions.
-                  </Text>
-                </View>
-              ) : (
-                <View style={styles.boardCard}>
-                  {alerts.map((al, idx) => (
-                    <View
-                      key={al.id}
-                      style={[
-                        styles.alertRow,
-                        idx === alerts.length - 1 && { borderBottomWidth: 0 },
-                      ]}
-                    >
-                      <View style={styles.alertLeft}>
-                        <Text style={styles.alertReward}>{al.rewardText}</Text>
-                        <Text style={styles.alertMeta}>
-                          {al.node} · {al.missionType} ({al.faction})
-                        </Text>
-                      </View>
-                      <View style={styles.alertRight}>
-                        <Text style={styles.alertTimer}>
-                          {formatRemainingTime(al.expiry, now)}
-                        </Text>
-                        <Text style={styles.alertCredits}>
-                          +{al.credits.toLocaleString()} Cr
-                        </Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
+        {isInitialLoad ? (
+          <View style={styles.skeletonStack}>
+            <SkeletonBlock height={28} width="55%" radius={radii.control} />
+            <SkeletonBlock height={260} radius={radii.card} />
+            <SkeletonBlock height={28} width="48%" radius={radii.control} />
+            <SkeletonBlock height={120} radius={radii.card} />
           </View>
-        )}
-
-        {/* SECTION 2: BARO KI'TEER */}
-        {activeSection === 'baro' && voidTrader && (
-          <View>
-            <SectionBarcodeHeader
-              title="Baro Ki'Teer · Void Trader"
-              subtitle={voidTrader.location}
-              rightText={voidTrader.active ? 'Docked' : 'Inbound'}
-            />
-
-            <View style={styles.baroSummaryCard}>
-              <View style={styles.baroSummaryTop}>
-                <View>
-                  <Text style={styles.baroLocationLabel}>Relay Destination</Text>
-                  <Text style={styles.baroLocationValue}>
-                    {voidTrader.location}
-                  </Text>
-                </View>
-                <StatusPill
-                  label={voidTrader.active ? 'Active Now' : 'In Transit'}
-                  filled={voidTrader.active}
-                />
-              </View>
-
-              <View style={styles.baroTimerBox}>
-                <Text style={styles.baroTimerLabel}>
-                  {voidTrader.active ? 'Departs Relay In' : 'Arrives At Relay In'}
-                </Text>
-                <Text style={styles.baroTimerValue}>
-                  {formatRemainingTime(
-                    voidTrader.active
-                      ? voidTrader.expiry
-                      : voidTrader.activation,
-                    now
-                  )}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.subSection}>
-              <SectionBarcodeHeader
-                title={`Void Trader Inventory (${voidTrader.inventory.length})`}
-                subtitle={
-                  voidTrader.active
-                    ? 'Live offerings available for Ducats & Credits'
-                    : 'Archived rotation manifest'
-                }
-              />
-
-              <View style={styles.boardCard}>
-                {voidTrader.inventory.map((item, idx) => (
-                  <View
-                    key={`${item.item}-${idx}`}
-                    style={[
-                      styles.baroItemRow,
-                      idx === voidTrader.inventory.length - 1 && {
-                        borderBottomWidth: 0,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.baroItemName}>{item.item}</Text>
-                    <View style={styles.baroCosts}>
-                      <View style={styles.costPillDucat}>
-                        <Text style={styles.ducatVal}>{item.ducats}</Text>
-                        <Text style={styles.ducatUnit}>Ducats</Text>
-                      </View>
-                      <View style={styles.costPillCredit}>
-                        <Text style={styles.creditVal}>
-                          {Math.round(item.credits / 1000)}k
-                        </Text>
-                        <Text style={styles.creditUnit}>Cr</Text>
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* SECTION 3: VOID FISSURES & INVASIONS */}
-        {activeSection === 'fissures' && (
-          <View>
-            <SectionBarcodeHeader
-              title="Active Void Fissures"
-              subtitle="Relic cracking missions sorted by tier"
-              rightText={`${fissures.length} Active`}
-            />
-
-            <View style={styles.boardCard}>
-              {fissures.map((f, idx) => (
-                <View
-                  key={f.id}
-                  style={[
-                    styles.fissureRow,
-                    idx === fissures.length - 1 && { borderBottomWidth: 0 },
-                  ]}
-                >
-                  <View style={styles.fissureLeft}>
-                    <View style={styles.fissureTitleLine}>
-                      <Text style={styles.fissureType}>{f.missionType}</Text>
-                      {f.isHard && (
-                        <Text style={styles.modeTag}>· Steel Path</Text>
-                      )}
-                      {f.isStorm && (
-                        <Text style={styles.modeTag}>· Void Storm</Text>
-                      )}
-                    </View>
-                    <Text style={styles.fissureNode}>
-                      {f.node} · {f.enemy}
-                    </Text>
-                  </View>
-
-                  <View style={styles.fissureRight}>
-                    <Text style={styles.fissureTier}>{f.tier}</Text>
-                    <Text style={styles.fissureTimer}>
-                      {formatRemainingTime(f.expiry, now)}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-
-            {/* Faction Invasions */}
-            <View style={styles.subSection}>
-              <SectionBarcodeHeader
-                title="Faction Invasions"
-                subtitle="Support Grineer or Corpus for Fieldron, Detonite & Mutagen"
-                rightText={`${invasions.length} Sectors`}
-              />
-
-              <View style={styles.invasionList}>
-                {invasions.map((inv) => (
-                  <View key={inv.id} style={styles.invasionCard}>
-                    <View style={styles.invasionTop}>
-                      <Text style={styles.invasionNode}>{inv.node}</Text>
-                      <Text style={styles.invasionPct}>{inv.completion}%</Text>
-                    </View>
-                    <Text style={styles.invasionDesc}>{inv.desc}</Text>
-
-                    <View style={styles.invasionBarTrack}>
-                      <View
-                        style={[
-                          styles.invasionBarFill,
-                          { width: `${inv.completion}%` },
-                        ]}
-                      />
-                    </View>
-
-                    <View style={styles.invasionRewards}>
-                      <View style={styles.invSide}>
-                        <Text style={styles.invFaction}>
-                          {inv.attackerFaction}
-                        </Text>
-                        <Text style={styles.invRewardText} numberOfLines={1}>
-                          {inv.attackerReward}
-                        </Text>
-                      </View>
-                      <View style={[styles.invSide, { alignItems: 'flex-end' }]}>
-                        <Text style={styles.invFaction}>
-                          {inv.defenderFaction}
-                        </Text>
-                        <Text style={styles.invRewardText} numberOfLines={1}>
-                          {inv.defenderReward}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* SECTION 4: SORTIE, ARCHON HUNT & NIGHTWAVE */}
-        {activeSection === 'ops' && (
-          <View>
-            {sortie && (
+        ) : !telemetry ? (
+          <EmptyStateCard
+            icon="orbit"
+            title="WorldState Unavailable"
+            description="Could not load Origin System telemetry. Check your connection and try again."
+            actionLabel="Retry Sync"
+            onAction={refreshTelemetry}
+          />
+        ) : (
+          <>
+            {/* SECTION 1: OPEN WORLD CYCLES & ALERTS */}
+            {activeSection === 'cycles' && (
               <View>
                 <SectionBarcodeHeader
-                  title={`Daily Sortie · ${sortie.boss}`}
-                  subtitle={`${sortie.faction} Command`}
-                  rightText={formatRemainingTime(sortie.expiry, now)}
+                  title="Open World Cycles"
+                  subtitle="Environmental rotations across 5 zones"
+                  rightText={`${cycles.length} Zones`}
                 />
 
                 <View style={styles.boardCard}>
-                  {sortie.variants.map((v, i) => (
-                    <View
-                      key={`${v.node}-${i}`}
-                      style={[
-                        styles.sortieRow,
-                        i === sortie.variants.length - 1 && {
-                          borderBottomWidth: 0,
-                        },
-                      ]}
-                    >
-                      <View style={styles.sortieStageBadge}>
-                        <Text style={styles.sortieStageText}>{i + 1}</Text>
+                  {cycles.map((cycle, index) => {
+                    const visual = getCycleVisual(cycle.state);
+                    const countdown = getCountdownDisplay(cycle.expiry, now);
+                    const zoneLabel = formatZoneLabel(cycle.zone);
+
+                    return (
+                      <View
+                        key={cycle.id}
+                        accessible
+                        accessibilityLabel={`${cycle.name}, ${zoneLabel}, ${visual.label}, ${countdown.text}`}
+                        style={[
+                          styles.cycleRow,
+                          index === cycles.length - 1 && styles.rowLast,
+                        ]}
+                      >
+                        <View style={styles.cycleInfo}>
+                          <Text style={styles.cycleTitle}>{cycle.name}</Text>
+                          <Text style={styles.cycleSubtitle}>{zoneLabel}</Text>
+                        </View>
+
+                        <View style={styles.cycleStatusCol}>
+                          <StatusPill
+                            label={visual.label}
+                            color={visual.color}
+                            icon={visual.icon}
+                            compact
+                          />
+                          <Text
+                            style={[
+                              styles.cycleCountdown,
+                              countdown.isUpdating && styles.updatingText,
+                            ]}
+                          >
+                            {countdown.text}
+                          </Text>
+                        </View>
                       </View>
-                      <View style={styles.sortieBody}>
-                        <Text style={styles.sortieType}>
-                          {v.missionType} · {v.node}
-                        </Text>
-                        <Text style={styles.sortieMod}>{v.modifier}</Text>
-                      </View>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.subSection}>
+                  <SectionBarcodeHeader
+                    title="Tactical Alerts & Events"
+                    subtitle="Active Lotus directives"
+                    rightText={`${alerts.length} Active`}
+                    rightColor={alerts.length > 0 ? M.acid : M.ash}
+                  />
+
+                  {alerts.length === 0 ? (
+                    <EmptyStateCard
+                      icon="bell-check-outline"
+                      title="No Tactical Alerts Active"
+                      description="No special Lotus directives are currently active. Check Fissures or Endgame for Void Relics, Invasions, and daily missions."
+                    />
+                  ) : (
+                    <View style={styles.boardCard}>
+                      {alerts.map((al, idx) => {
+                        const alCountdown = getCountdownDisplay(al.expiry, now);
+                        const factionColor = getFactionColor(al.faction);
+                        return (
+                          <View
+                            key={al.id}
+                            accessible
+                            accessibilityLabel={`${al.rewardText} at ${al.node}, ${al.missionType}, ${alCountdown.text}`}
+                            style={[
+                              styles.alertRow,
+                              idx === alerts.length - 1 && styles.rowLast,
+                            ]}
+                          >
+                            <View style={styles.alertLeft}>
+                              <Text style={styles.alertReward}>
+                                {al.rewardText}
+                              </Text>
+                              <View style={styles.alertMetaRow}>
+                                <Text style={styles.alertMeta}>
+                                  {al.node} · {al.missionType}
+                                </Text>
+                                <StatusPill
+                                  label={al.faction}
+                                  color={factionColor}
+                                  compact
+                                />
+                              </View>
+                            </View>
+                            <View style={styles.alertRight}>
+                              <Text
+                                style={[
+                                  styles.alertTimer,
+                                  alCountdown.isUpdating && styles.updatingText,
+                                ]}
+                              >
+                                {alCountdown.text}
+                              </Text>
+                              {al.credits > 0 ? (
+                                <Text style={styles.alertCredits}>
+                                  +{al.credits.toLocaleString()} Cr
+                                </Text>
+                              ) : null}
+                            </View>
+                          </View>
+                        );
+                      })}
                     </View>
-                  ))}
+                  )}
                 </View>
               </View>
             )}
 
-            {archon && (
-              <View style={styles.subSection}>
+            {/* SECTION 2: BARO KI'TEER */}
+            {activeSection === 'baro' && voidTrader && (
+              <View>
                 <SectionBarcodeHeader
-                  title={`Archon Hunt · ${archon.boss}`}
-                  subtitle="Weekly Narmer Showdown"
-                  rightText={formatRemainingTime(archon.expiry, now)}
+                  title="Baro Ki'Teer"
+                  subtitle="Void Trader schedule & Relay status"
+                  rightText={voidTrader.active ? 'Docked' : 'In Transit'}
+                  rightColor={voidTrader.active ? M.emerald : M.amber}
                 />
 
+                {/* Flat single-surface Baro summary card split by 1px hairline divider */}
                 <View style={styles.boardCard}>
-                  {archon.missions.map((m, i) => (
-                    <View
-                      key={`${m.node}-${i}`}
+                  <View style={styles.baroSummaryTop}>
+                    <View style={styles.baroLocationCol}>
+                      <Text style={styles.baroLocationLabel}>
+                        Relay Destination
+                      </Text>
+                      <Text style={styles.baroLocationValue}>
+                        {voidTrader.location}
+                      </Text>
+                    </View>
+                    <StatusPill
+                      label={voidTrader.active ? 'Docked' : 'In Transit'}
+                      color={voidTrader.active ? M.emerald : M.amber}
+                      dot
+                    />
+                  </View>
+
+                  <View style={styles.baroTimerRow}>
+                    <View style={styles.baroTimerLabelWrap}>
+                      <MaterialCommunityIcons
+                        name="clock-outline"
+                        size={16}
+                        color={M.ash}
+                      />
+                      <Text style={styles.baroTimerLabel}>
+                        {voidTrader.active
+                          ? 'Departs Relay In'
+                          : 'Arrives At Relay In'}
+                      </Text>
+                    </View>
+                    <Text
                       style={[
-                        styles.sortieRow,
-                        i === archon.missions.length - 1 && {
-                          borderBottomWidth: 0,
-                        },
+                        styles.baroTimerValue,
+                        baroCountdown.isUpdating && styles.updatingText,
                       ]}
                     >
-                      <View style={styles.sortieStageBadge}>
-                        <Text style={styles.sortieStageText}>{i + 1}</Text>
-                      </View>
-                      <View style={styles.sortieBody}>
-                        <Text style={styles.sortieType}>{m.type}</Text>
-                        <Text style={styles.sortieMod}>{m.node}</Text>
-                      </View>
+                      {baroCountdown.text}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.subSection}>
+                  <SectionBarcodeHeader
+                    title={
+                      voidTrader.inventory.length > 0
+                        ? `Void Offerings (${voidTrader.inventory.length})`
+                        : 'Void Offerings'
+                    }
+                    subtitle={
+                      voidTrader.active
+                        ? 'Live offerings available for Ducats & Credits'
+                        : 'Inventory updates once Baro docks at the Relay'
+                    }
+                  />
+
+                  {!voidTrader.active && voidTrader.inventory.length === 0 ? (
+                    <EmptyStateCard
+                      icon="rocket-launch-outline"
+                      title="Baro Ki'Teer Is In Transit"
+                      description={
+                        baroCountdown.isUpdating
+                          ? `Heading to ${voidTrader.location}. Offerings will appear here once Baro docks.`
+                          : `Returns to ${voidTrader.location} in ${baroCountdown.text}. Offerings will appear here once Baro docks.`
+                      }
+                      actionLabel="Refresh Schedule"
+                      onAction={refreshTelemetry}
+                    />
+                  ) : voidTrader.inventory.length === 0 ? (
+                    <EmptyStateCard
+                      icon="package-variant"
+                      title="Inventory Syncing"
+                      description={`Baro is docked at ${voidTrader.location}, but offerings have not synced yet.`}
+                      actionLabel="Refresh Offerings"
+                      onAction={refreshTelemetry}
+                    />
+                  ) : (
+                    <View style={styles.boardCard}>
+                      {voidTrader.inventory.map((item, idx) => (
+                        <View
+                          key={`${item.item}-${idx}`}
+                          accessible
+                          accessibilityLabel={`${item.item}, ${item.ducats} Ducats, ${item.credits.toLocaleString()} Credits`}
+                          style={[
+                            styles.baroItemRow,
+                            idx === voidTrader.inventory.length - 1 &&
+                              styles.rowLast,
+                          ]}
+                        >
+                          <Text style={styles.baroItemName}>{item.item}</Text>
+                          <View style={styles.baroCosts}>
+                            <View style={styles.costGroup}>
+                              <Text style={styles.ducatVal}>{item.ducats}</Text>
+                              <Text style={styles.ducatUnit}>Ducats</Text>
+                            </View>
+                            <View style={styles.costGroup}>
+                              <Text style={styles.creditVal}>
+                                {Math.round(item.credits / 1000)}k
+                              </Text>
+                              <Text style={styles.creditUnit}>Cr</Text>
+                            </View>
+                          </View>
+                        </View>
+                      ))}
                     </View>
-                  ))}
+                  )}
                 </View>
               </View>
             )}
 
-            {nightwave && nightwave.challenges.length > 0 && (
-              <View style={styles.subSection}>
+            {/* SECTION 3: VOID FISSURES & INVASIONS */}
+            {activeSection === 'fissures' && (
+              <View>
                 <SectionBarcodeHeader
-                  title="Nightwave Acts"
-                  subtitle={`Series ${nightwave.season} standing challenges`}
+                  title="Active Void Fissures"
+                  subtitle="Relic cracking missions sorted by tier"
+                  rightText={`${filteredFissures.length} Active`}
                 />
 
-                <View style={styles.boardCard}>
-                  {nightwave.challenges.map((ch, idx) => (
-                    <View
-                      key={ch.id}
-                      style={[
-                        styles.nwRow,
-                        idx === nightwave.challenges.length - 1 && {
-                          borderBottomWidth: 0,
-                        },
-                      ]}
-                    >
-                      <View style={styles.nwLeft}>
-                        <Text style={styles.nwTitle}>{ch.title}</Text>
-                        <Text style={styles.nwDesc}>{ch.desc}</Text>
-                      </View>
-                      <View style={styles.nwRight}>
-                        <Text style={styles.nwStanding}>
-                          +{ch.reputation.toLocaleString()}
+                {/* >=44px Horizontal Mode Filter Chips with Live Counts */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.filterRow}
+                  style={styles.filterScroll}
+                >
+                  {FISSURE_MODES.map((mode) => {
+                    const selected = fissureMode === mode.id;
+                    const count = fissureCounts[mode.id];
+                    return (
+                      <Pressable
+                        key={mode.id}
+                        style={({ pressed }) => [
+                          styles.filterChip,
+                          selected && styles.filterChipActive,
+                          pressed && styles.pressed,
+                        ]}
+                        onPress={() => setFissureMode(mode.id)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${mode.label} fissures, ${count} active`}
+                        accessibilityState={{ selected }}
+                      >
+                        {mode.dotColor ? (
+                          <View
+                            style={[
+                              styles.filterDot,
+                              {
+                                backgroundColor: selected
+                                  ? M.acid
+                                  : mode.dotColor,
+                              },
+                            ]}
+                          />
+                        ) : null}
+                        <Text
+                          style={[
+                            styles.filterChipText,
+                            selected && styles.filterChipTextActive,
+                          ]}
+                        >
+                          {mode.label}
                         </Text>
-                        <Text style={styles.nwType}>
-                          {ch.isElite ? 'Elite' : ch.isDaily ? 'Daily' : 'Weekly'}
+                        <Text
+                          style={[
+                            styles.filterChipCount,
+                            selected && styles.filterChipCountActive,
+                          ]}
+                        >
+                          {count}
                         </Text>
-                      </View>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+
+                {filteredFissures.length === 0 ? (
+                  fissures.length > 0 ? (
+                    <EmptyStateCard
+                      icon="filter-off-outline"
+                      title={`No ${activeModeLabel} Fissures`}
+                      description="No active Void Fissures match this mode right now."
+                      actionLabel="Show All Fissures"
+                      onAction={() => setFissureMode('all')}
+                    />
+                  ) : (
+                    <EmptyStateCard
+                      icon="atom"
+                      title="No Active Void Fissures"
+                      description="Fissure missions are currently rotating. Refresh to fetch the latest list."
+                      actionLabel="Refresh Fissures"
+                      onAction={refreshTelemetry}
+                    />
+                  )
+                ) : (
+                  <View style={styles.boardCard}>
+                    {filteredFissures.map((f, idx) => {
+                      const tierColor = getFissureTierColor(f.tier);
+                      const fCountdown = getCountdownDisplay(f.expiry, now);
+                      return (
+                        <View
+                          key={f.id}
+                          accessible
+                          accessibilityLabel={`${f.tier} ${f.missionType} on ${f.node}, ${f.enemy}${f.isHard ? ', Steel Path' : ''}${f.isStorm ? ', Void Storm' : ''}, ${fCountdown.text}`}
+                          style={[
+                            styles.fissureRow,
+                            idx === filteredFissures.length - 1 &&
+                              styles.rowLast,
+                          ]}
+                        >
+                          <View style={styles.fissureLeft}>
+                            <View style={styles.fissureTitleLine}>
+                              <Text style={styles.fissureType}>
+                                {f.missionType}
+                              </Text>
+                              {f.isHard ? (
+                                <StatusPill
+                                  label="Steel Path"
+                                  color={M.vermilion}
+                                  compact
+                                />
+                              ) : null}
+                              {f.isStorm ? (
+                                <StatusPill
+                                  label="Void Storm"
+                                  color={M.violet}
+                                  compact
+                                />
+                              ) : null}
+                            </View>
+                            <Text style={styles.fissureNode}>
+                              {f.node} · {f.enemy}
+                            </Text>
+                          </View>
+
+                          <View style={styles.fissureRight}>
+                            <StatusPill
+                              label={f.tier}
+                              color={tierColor}
+                              compact
+                            />
+                            <Text
+                              style={[
+                                styles.fissureTimer,
+                                fCountdown.isUpdating && styles.updatingText,
+                              ]}
+                            >
+                              {fCountdown.text}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {/* Faction Invasions with Dual-Colored Progress Bar */}
+                <View style={styles.subSection}>
+                  <SectionBarcodeHeader
+                    title="Faction Invasions"
+                    subtitle="Support Grineer or Corpus for Fieldron, Detonite & Mutagen"
+                    rightText={`${invasions.length} Sectors`}
+                  />
+
+                  {invasions.length === 0 ? (
+                    <EmptyStateCard
+                      icon="sword-cross"
+                      title="No Active Invasions"
+                      description="Origin System sectors are currently uncontested."
+                    />
+                  ) : (
+                    <View style={styles.invasionList}>
+                      {invasions.map((inv) => {
+                        const attackerColor = getFactionColor(
+                          inv.attackerFaction
+                        );
+                        const defenderColor = getFactionColor(
+                          inv.defenderFaction
+                        );
+                        const pct = Math.max(0, Math.min(100, inv.completion));
+                        return (
+                          <View
+                            key={inv.id}
+                            style={styles.invasionCard}
+                            accessible
+                            accessibilityLabel={`${inv.node}, ${inv.attackerFaction} versus ${inv.defenderFaction}, ${pct}% complete`}
+                          >
+                            <View style={styles.invasionTop}>
+                              <Text style={styles.invasionNode}>
+                                {inv.node}
+                              </Text>
+                              <Text style={styles.invasionPct}>{pct}%</Text>
+                            </View>
+                            <Text style={styles.invasionDesc}>{inv.desc}</Text>
+
+                            <View style={styles.invasionBarTrack}>
+                              {pct > 0 ? (
+                                <View
+                                  style={[
+                                    styles.invasionBarSegment,
+                                    {
+                                      width: `${pct}%`,
+                                      backgroundColor: attackerColor,
+                                    },
+                                  ]}
+                                />
+                              ) : null}
+                              {pct > 0 && pct < 100 ? (
+                                <View style={styles.invasionBarGap} />
+                              ) : null}
+                              {pct < 100 ? (
+                                <View
+                                  style={[
+                                    styles.invasionBarSegment,
+                                    {
+                                      flex: 1,
+                                      backgroundColor: defenderColor,
+                                    },
+                                  ]}
+                                />
+                              ) : null}
+                            </View>
+
+                            <View style={styles.invasionRewards}>
+                              <View style={styles.invSide}>
+                                <View style={styles.invFactionRow}>
+                                  <View
+                                    style={[
+                                      styles.factionDot,
+                                      { backgroundColor: attackerColor },
+                                    ]}
+                                  />
+                                  <Text
+                                    style={[
+                                      styles.invFaction,
+                                      { color: attackerColor },
+                                    ]}
+                                  >
+                                    {inv.attackerFaction}
+                                  </Text>
+                                </View>
+                                <Text
+                                  style={styles.invRewardText}
+                                  numberOfLines={2}
+                                >
+                                  {inv.attackerReward}
+                                </Text>
+                              </View>
+
+                              <View
+                                style={[
+                                  styles.invSide,
+                                  styles.invSideRight,
+                                ]}
+                              >
+                                <View style={styles.invFactionRow}>
+                                  <Text
+                                    style={[
+                                      styles.invFaction,
+                                      { color: defenderColor },
+                                    ]}
+                                  >
+                                    {inv.defenderFaction}
+                                  </Text>
+                                  <View
+                                    style={[
+                                      styles.factionDot,
+                                      { backgroundColor: defenderColor },
+                                    ]}
+                                  />
+                                </View>
+                                <Text
+                                  style={[
+                                    styles.invRewardText,
+                                    styles.textRight,
+                                  ]}
+                                  numberOfLines={2}
+                                >
+                                  {inv.defenderReward}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        );
+                      })}
                     </View>
-                  ))}
+                  )}
                 </View>
               </View>
             )}
-          </View>
+
+            {/* SECTION 4: ENDGAME (SORTIE, ARCHON HUNT & NIGHTWAVE) */}
+            {activeSection === 'ops' && (
+              <View>
+                {!hasEndgameContent ? (
+                  <EmptyStateCard
+                    icon="shield-sword-outline"
+                    title="Endgame Rotations Updating"
+                    description="Sortie, Archon Hunt, and Nightwave acts are syncing. Refresh to check again."
+                    actionLabel="Refresh Endgame"
+                    onAction={refreshTelemetry}
+                  />
+                ) : (
+                  <>
+                    {sortie && sortie.variants.length > 0 ? (
+                      <View>
+                        <SectionBarcodeHeader
+                          title={`Daily Sortie · ${sortie.boss}`}
+                          subtitle={`${sortie.faction} Command`}
+                          rightText={sortieCountdown.text}
+                          rightColor={
+                            sortieCountdown.isUpdating ? M.amber : M.ash
+                          }
+                          accentColor={getFactionColor(sortie.faction)}
+                        />
+
+                        <View style={styles.boardCard}>
+                          {sortie.variants.map((v, i) => (
+                            <View
+                              key={`${v.node}-${i}`}
+                              accessible
+                              accessibilityLabel={`Stage ${i + 1}: ${v.missionType} on ${v.node}, modifier ${v.modifier}`}
+                              style={[
+                                styles.stageRow,
+                                i === sortie.variants.length - 1 &&
+                                  styles.rowLast,
+                              ]}
+                            >
+                              <View
+                                style={[
+                                  styles.stageBadge,
+                                  {
+                                    backgroundColor: withAlpha(M.amber, 0.14),
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.stageBadgeText,
+                                    { color: M.amber },
+                                  ]}
+                                >
+                                  {i + 1}
+                                </Text>
+                              </View>
+                              <View style={styles.stageBody}>
+                                <Text style={styles.stageTitle}>
+                                  {v.missionType} · {v.node}
+                                </Text>
+                                <Text style={styles.stageMeta}>
+                                  {v.modifier}
+                                </Text>
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
+
+                    {archon && archon.missions.length > 0 ? (
+                      <View
+                        style={
+                          sortie && sortie.variants.length > 0
+                            ? styles.subSection
+                            : undefined
+                        }
+                      >
+                        <SectionBarcodeHeader
+                          title={`Archon Hunt · ${archon.boss}`}
+                          subtitle="Weekly Narmer Showdown"
+                          rightText={archonCountdown.text}
+                          rightColor={
+                            archonCountdown.isUpdating ? M.amber : M.ash
+                          }
+                          accentColor={M.vermilion}
+                        />
+
+                        <View style={styles.boardCard}>
+                          {archon.missions.map((m, i) => (
+                            <View
+                              key={`${m.node}-${i}`}
+                              accessible
+                              accessibilityLabel={`Archon stage ${i + 1}: ${m.type} on ${m.node}`}
+                              style={[
+                                styles.stageRow,
+                                i === archon.missions.length - 1 &&
+                                  styles.rowLast,
+                              ]}
+                            >
+                              <View
+                                style={[
+                                  styles.stageBadge,
+                                  {
+                                    backgroundColor: withAlpha(
+                                      M.vermilion,
+                                      0.14
+                                    ),
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.stageBadgeText,
+                                    { color: M.vermilion },
+                                  ]}
+                                >
+                                  {i + 1}
+                                </Text>
+                              </View>
+                              <View style={styles.stageBody}>
+                                <Text style={styles.stageTitle}>{m.type}</Text>
+                                <Text style={styles.stageMeta}>{m.node}</Text>
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
+
+                    {nightwave && nightwave.challenges.length > 0 ? (
+                      <View style={styles.subSection}>
+                        <SectionBarcodeHeader
+                          title="Nightwave Acts"
+                          subtitle={`Series ${nightwave.season} standing challenges`}
+                          rightText={`${nightwave.challenges.length} Acts`}
+                          accentColor={M.violet}
+                        />
+
+                        <View style={styles.boardCard}>
+                          {nightwave.challenges.map((ch, idx) => {
+                            const tierLabel = ch.isElite
+                              ? 'Elite'
+                              : ch.isDaily
+                              ? 'Daily'
+                              : 'Weekly';
+                            const tierColor = ch.isElite
+                              ? M.amber
+                              : ch.isDaily
+                              ? M.cyan
+                              : M.violet;
+
+                            return (
+                              <View
+                                key={ch.id}
+                                accessible
+                                accessibilityLabel={`${tierLabel} Nightwave act: ${ch.title}, ${ch.reputation.toLocaleString()} standing`}
+                                style={[
+                                  styles.nwRow,
+                                  idx === nightwave.challenges.length - 1 &&
+                                    styles.rowLast,
+                                ]}
+                              >
+                                <View style={styles.nwLeft}>
+                                  <Text style={styles.nwTitle}>{ch.title}</Text>
+                                  <Text style={styles.nwDesc}>{ch.desc}</Text>
+                                </View>
+                                <View style={styles.nwRight}>
+                                  <StatusPill
+                                    label={tierLabel}
+                                    color={tierColor}
+                                    compact
+                                  />
+                                  <Text style={styles.nwStanding}>
+                                    +{ch.reputation.toLocaleString()}
+                                  </Text>
+                                </View>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    ) : null}
+                  </>
+                )}
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
     </View>
@@ -466,31 +965,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: M.void,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    backgroundColor: M.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: M.border,
-  },
-  screenTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: M.bone,
-    letterSpacing: -0.4,
-  },
-  topBarMeta: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: M.ash,
+  pressed: {
+    opacity: 0.78,
   },
   tabRow: {
     flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
+    gap: 6,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 10,
     backgroundColor: M.surface,
     borderBottomWidth: 1,
@@ -498,17 +979,18 @@ const styles = StyleSheet.create({
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 8,
+    minHeight: 44,
+    paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 4,
+    borderRadius: radii.control,
     backgroundColor: M.void,
     borderWidth: 1,
     borderColor: M.border,
   },
   tabBtnActive: {
-    backgroundColor: M.bone,
-    borderColor: M.bone,
+    backgroundColor: withAlpha(M.acid, 0.16),
+    borderColor: M.acid,
   },
   tabBtnText: {
     fontSize: 13,
@@ -516,26 +998,37 @@ const styles = StyleSheet.create({
     color: M.inkSecondary,
   },
   tabBtnTextActive: {
-    color: M.void,
+    color: M.acid,
     fontWeight: '700',
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: spacing.lg,
     paddingBottom: 36,
   },
+  skeletonStack: {
+    gap: spacing.md,
+  },
   subSection: {
-    marginTop: 24,
+    marginTop: spacing.xl,
   },
   boardCard: {
     backgroundColor: M.surface,
     borderWidth: 1,
     borderColor: M.border,
-    borderRadius: 6,
+    borderRadius: radii.card,
     overflow: 'hidden',
   },
+  rowLast: {
+    borderBottomWidth: 0,
+  },
+  updatingText: {
+    color: M.amber,
+  },
+
+  // Cycles
   cycleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -544,15 +1037,16 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: M.border,
+    gap: 12,
   },
   cycleInfo: {
     flex: 1,
-    paddingRight: 10,
   },
   cycleTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: M.bone,
+    lineHeight: 21,
   },
   cycleSubtitle: {
     fontSize: 13,
@@ -561,117 +1055,117 @@ const styles = StyleSheet.create({
   },
   cycleStatusCol: {
     alignItems: 'flex-end',
-  },
-  cycleStateText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: M.inkSecondary,
+    gap: 5,
   },
   cycleCountdown: {
     fontFamily: 'SpaceMono',
-    fontSize: 13,
-    fontWeight: '600',
-    color: M.ash,
-    marginTop: 2,
-  },
-  emptyCard: {
-    backgroundColor: M.surface,
-    borderWidth: 1,
-    borderColor: M.border,
-    borderRadius: 6,
-    padding: 16,
-  },
-  emptyTitle: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '700',
-    color: M.bone,
-  },
-  emptyDesc: {
-    fontSize: 14,
     color: M.inkSecondary,
-    lineHeight: 20,
-    marginTop: 4,
+    fontVariant: ['tabular-nums'],
   },
+
+  // Alerts
   alertRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: M.border,
+    gap: 12,
   },
   alertLeft: {
     flex: 1,
-    paddingRight: 12,
+    gap: 5,
   },
   alertReward: {
     fontSize: 15,
     fontWeight: '700',
-    color: M.bone,
+    color: M.amber,
+    lineHeight: 20,
+  },
+  alertMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   alertMeta: {
     fontSize: 13,
-    color: M.ash,
-    marginTop: 2,
+    color: M.inkSecondary,
   },
   alertRight: {
     alignItems: 'flex-end',
+    gap: 3,
   },
   alertTimer: {
     fontFamily: 'SpaceMono',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: M.bone,
+    fontVariant: ['tabular-nums'],
   },
   alertCredits: {
     fontFamily: 'SpaceMono',
     fontSize: 12,
     color: M.ash,
-    marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
-  baroSummaryCard: {
-    backgroundColor: M.surface,
-    borderWidth: 1,
-    borderColor: M.border,
-    borderRadius: 6,
-    padding: 16,
-    gap: 14,
-  },
+
+  // Baro Ki'Teer (Flat single card with hairline divider)
   baroSummaryTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: spacing.lg,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+  },
+  baroLocationCol: {
+    flex: 1,
   },
   baroLocationLabel: {
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: '600',
     color: M.ash,
   },
   baroLocationValue: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: M.bone,
     marginTop: 2,
+    lineHeight: 22,
   },
-  baroTimerBox: {
+  baroTimerRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: M.void,
-    padding: 12,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: M.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 14,
+    backgroundColor: M.surfaceElevated,
+    gap: 10,
+  },
+  baroTimerLabelWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    flexShrink: 1,
   },
   baroTimerLabel: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '600',
     color: M.inkSecondary,
   },
   baroTimerValue: {
     fontFamily: 'SpaceMono',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: M.bone,
+    fontVariant: ['tabular-nums'],
   },
   baroItemRow: {
     flexDirection: 'row',
@@ -688,13 +1182,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: M.bone,
+    lineHeight: 20,
   },
   baroCosts: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  costPillDucat: {
+  costGroup: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 4,
@@ -703,27 +1198,76 @@ const styles = StyleSheet.create({
     fontFamily: 'SpaceMono',
     fontSize: 14,
     fontWeight: '700',
-    color: M.bone,
+    color: M.amber,
+    fontVariant: ['tabular-nums'],
   },
   ducatUnit: {
     fontSize: 12,
-    color: M.ash,
-  },
-  costPillCredit: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 3,
+    fontWeight: '600',
+    color: withAlpha(M.amber, 0.8),
   },
   creditVal: {
     fontFamily: 'SpaceMono',
     fontSize: 14,
     fontWeight: '600',
     color: M.inkSecondary,
+    fontVariant: ['tabular-nums'],
   },
   creditUnit: {
     fontSize: 12,
     color: M.ash,
   },
+
+  // Fissure Mode Filter Chips
+  filterScroll: {
+    marginBottom: spacing.md,
+    marginHorizontal: -spacing.lg,
+  },
+  filterRow: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    borderRadius: radii.control,
+    backgroundColor: M.surface,
+    borderWidth: 1,
+    borderColor: M.border,
+  },
+  filterChipActive: {
+    backgroundColor: withAlpha(M.acid, 0.16),
+    borderColor: M.acid,
+  },
+  filterDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  filterChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: M.inkSecondary,
+  },
+  filterChipTextActive: {
+    color: M.acid,
+    fontWeight: '700',
+  },
+  filterChipCount: {
+    fontFamily: 'SpaceMono',
+    fontSize: 12,
+    fontWeight: '700',
+    color: M.ash,
+    fontVariant: ['tabular-nums'],
+  },
+  filterChipCountActive: {
+    color: M.acid,
+  },
+
+  // Fissures List
   fissureRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -732,10 +1276,11 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: M.border,
+    gap: 12,
   },
   fissureLeft: {
     flex: 1,
-    paddingRight: 10,
+    gap: 4,
   },
   fissureTitleLine: {
     flexDirection: 'row',
@@ -748,30 +1293,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: M.bone,
   },
-  modeTag: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: M.ash,
-  },
   fissureNode: {
     fontSize: 13,
     color: M.ash,
-    marginTop: 2,
   },
   fissureRight: {
     alignItems: 'flex-end',
-  },
-  fissureTier: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: M.bone,
+    gap: 5,
   },
   fissureTimer: {
     fontFamily: 'SpaceMono',
     fontSize: 12,
-    color: M.ash,
-    marginTop: 2,
+    fontWeight: '700',
+    color: M.inkSecondary,
+    fontVariant: ['tabular-nums'],
   },
+
+  // Invasions
   invasionList: {
     gap: 10,
   },
@@ -779,24 +1317,27 @@ const styles = StyleSheet.create({
     backgroundColor: M.surface,
     borderWidth: 1,
     borderColor: M.border,
-    borderRadius: 6,
+    borderRadius: radii.card,
     padding: 14,
   },
   invasionTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
   },
   invasionNode: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '700',
     color: M.bone,
   },
   invasionPct: {
     fontFamily: 'SpaceMono',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: M.bone,
+    fontVariant: ['tabular-nums'],
   },
   invasionDesc: {
     fontSize: 13,
@@ -805,79 +1346,100 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   invasionBarTrack: {
-    height: 6,
-    backgroundColor: M.void,
-    borderRadius: 3,
+    flexDirection: 'row',
+    height: 7,
+    backgroundColor: M.surfaceElevated,
+    borderRadius: 4,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: M.border,
   },
-  invasionBarFill: {
+  invasionBarSegment: {
     height: '100%',
-    backgroundColor: M.bone,
+  },
+  invasionBarGap: {
+    width: 2,
+    height: '100%',
+    backgroundColor: M.void,
   },
   invasionRewards: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
-    gap: 10,
+    gap: 12,
   },
   invSide: {
     flex: 1,
   },
+  invSideRight: {
+    alignItems: 'flex-end',
+  },
+  invFactionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  factionDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   invFaction: {
     fontSize: 12,
-    fontWeight: '600',
-    color: M.ash,
+    fontWeight: '700',
   },
   invRewardText: {
     fontSize: 13,
     fontWeight: '600',
     color: M.inkSecondary,
-    marginTop: 2,
+    marginTop: 3,
+    lineHeight: 18,
   },
-  sortieRow: {
+  textRight: {
+    textAlign: 'right',
+  },
+
+  // Endgame (Sortie, Archon, Nightwave)
+  stageRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: M.border,
   },
-  sortieStageBadge: {
+  stageBadge: {
     width: 28,
     height: 28,
-    borderRadius: 4,
-    backgroundColor: M.void,
-    borderWidth: 1,
-    borderColor: M.borderActive,
+    borderRadius: radii.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sortieStageText: {
+  stageBadgeText: {
     fontFamily: 'SpaceMono',
     fontSize: 13,
     fontWeight: '700',
-    color: M.bone,
+    fontVariant: ['tabular-nums'],
   },
-  sortieBody: {
+  stageBody: {
     flex: 1,
   },
-  sortieType: {
+  stageTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: M.bone,
+    lineHeight: 20,
   },
-  sortieMod: {
+  stageMeta: {
     fontSize: 13,
-    color: M.ash,
+    color: M.inkSecondary,
     marginTop: 2,
   },
   nwRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: M.border,
     gap: 12,
@@ -889,25 +1451,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: M.bone,
+    lineHeight: 20,
   },
   nwDesc: {
     fontSize: 13,
     color: M.inkSecondary,
-    marginTop: 2,
+    marginTop: 3,
     lineHeight: 18,
   },
   nwRight: {
     alignItems: 'flex-end',
+    gap: 5,
   },
   nwStanding: {
     fontFamily: 'SpaceMono',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: M.bone,
-  },
-  nwType: {
-    fontSize: 12,
-    color: M.ash,
-    marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
 });

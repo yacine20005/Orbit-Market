@@ -1,20 +1,20 @@
-# Utiliser une image Python officielle
+# Official slim Python image
 FROM python:3.11-slim
 
-# Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers de requirements
 COPY requirements.txt .
-
-# Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code de l'application
 COPY ./backend ./backend
 
-# Exposer le port 8000
+# Run as a non-root user with write access only to the manifest directory
+RUN useradd --create-home --shell /bin/bash appuser \
+    && mkdir -p /app/backend/manifest \
+    && chown -R appuser:appuser /app/backend/manifest
+
+USER appuser
+
 EXPOSE 8000
 
-# Commande pour lancer l'application
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

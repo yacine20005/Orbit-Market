@@ -1,41 +1,82 @@
+import logging
 import os
-from typing import Optional
+from typing import Any, Optional
 
 import httpx
-from dotenv import load_dotenv
 
-load_dotenv()
+try:
+    from dotenv import load_dotenv
 
-BUNGIE_API_KEY = os.getenv("BUNGIE_API_KEY")
-if not BUNGIE_API_KEY:
-    raise ValueError("BUNGIE_API_KEY environment variable is not set.")
+    load_dotenv()
+except ImportError:
+    pass
+
+logger = logging.getLogger(__name__)
 
 BUNGIE_API_URL = "https://www.bungie.net/Platform"
 
 async_client = httpx.AsyncClient(timeout=20.0)
-async def make_bungie_request(endpoint: str, params: Optional[dict] = None):
-    """
-    Makes an authenticated GET request to the Bungie.net API.
 
-    Args:
-        endpoint: The API endpoint path (e.g., "/Destiny2/Vendors/").
-        params: A dictionary of query parameters.
 
-    Returns:
-        The JSON response from the API as a dictionary.
-    """
-    headers = {"X-API-Key": str(BUNGIE_API_KEY)}
+def get_bungie_api_key() -> Optional[str]:
+    """Read BUNGIE_API_KEY lazily so imports and healthchecks never fail without it."""
+    key = os.getenv("BUNGIE_API_KEY", "").strip()
+    return key or None
+
+
+def get_async_client() -> httpx.AsyncClient:
+    """Return a live shared AsyncClient, recreating it if previously closed."""
+    global async_client
+    if async_client.is_closed:
+        async_client = httpx.AsyncClient(timeout=20.0)
+    return async_client
+
+
+async def close_async_client() -> None:
+    """Close the shared AsyncClient cleanly on shutdown."""
+    if not async_client.is_closed:
+        await async_client.aclose()
+
+
+async def make_bungie_request(
+    endpoint: str, params: Optional[dict] = None
+) -> Optional[dict[str, Any]]:
+    """Make an authenticated GET request to the Bungie.net Platform API."""
+    api_key = get_bungie_api_key()
+    if not api_key:
+        logger.error("BUNGIE_API_KEY environment variable is not set.")
+        return None
+
+    headers = {"X-API-Key": api_key}
     url = f"{BUNGIE_API_URL}{endpoint}"
+    client = get_async_client()
 
     try:
-        response = await async_client.get(url, headers=headers, params=params)
-        response.raise_for_status()  # Raise an exception for non-200 status codes
-        return response.json()
+        response = await client.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        payload = response.json()
     except httpx.HTTPStatusError as exc:
-        # Handle HTTP errors (e.g., 4xx, 5xx)
-        print(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
+        logger.error(
+            "Bungie API HTTP %d while requesting %s",
+            exc.response.status_code,
+            exc.request.url,
+        )
         return None
     except httpx.RequestError as exc:
-        # Handle other request errors (e.g., network issues)
-        print(f"An error occurred while requesting {exc.request.url!r}.")
+        logger.error("Network error while requesting %s: %s", exc.request.url, exc)
         return None
+    except ValueError as exc:
+        logger.error("Invalid JSON from Bungie API (%s): %s", url, exc)
+        return None
+
+    # Bungie uses ErrorCode == 1 for Success (PlatformErrorCodes.Success)
+    if isinstance(payload, dict) and payload.get("ErrorCode", 1) != 1:
+        logger.warning(
+            "Bungie API returned ErrorCode=%s (%s) for %s",
+            payload.get("ErrorCode"),
+            payload.get("ErrorStatus"),
+            endpoint,
+        )
+        return None
+
+    return payload

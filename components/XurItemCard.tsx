@@ -7,7 +7,13 @@ import {
   Text,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Colors, { getCurrencyName } from '@/constants/Colors';
+import Colors, {
+  radii,
+  getCurrencyName,
+  getRarityColor,
+  getClassColor,
+  cleanBungieText,
+} from '@/constants/Colors';
 import { XurInventoryItem } from '@/services/api';
 import { SegmentedStatBar } from './MarathonPrimitives';
 
@@ -19,18 +25,27 @@ interface XurItemCardProps {
   onPress: () => void;
 }
 
+const ARMOR_TYPE_RE = /^(helmet|gauntlets|chest armor|leg armor)$/i;
+
+const getClassLabel = (classType: number): string | null => {
+  if (classType === 0) return 'Titan';
+  if (classType === 1) return 'Hunter';
+  if (classType === 2) return 'Warlock';
+  return null;
+};
+
 const getMetaLabel = (item: XurInventoryItem): string => {
-  if (item.rollType === 'curated') return 'Curated Perks';
+  if (item.rollType === 'curated') return 'Curated Roll';
   if (item.rollType === 'random') return 'Random Roll';
-  if (item.classType === 0) return 'Titan';
-  if (item.classType === 1) return 'Hunter';
-  if (item.classType === 2) return 'Warlock';
+  const cls = getClassLabel(item.classType);
+  if (cls) return cls;
   return item.rarity;
 };
 
 const getPerkPreviewLine = (item: XurInventoryItem): string | null => {
   if (!item.perks || item.perks.length === 0) {
-    return item.itemDescription || null;
+    const cleaned = cleanBungieText(item.itemDescription);
+    return cleaned || null;
   }
 
   if (item.rollType === 'curated') {
@@ -53,9 +68,8 @@ const getPerkPreviewLine = (item: XurInventoryItem): string | null => {
   }
 
   const primary = item.perks[0];
-  return primary.description
-    ? `${primary.name} — ${primary.description}`
-    : primary.name;
+  const cleanedDesc = cleanBungieText(primary.description);
+  return cleanedDesc ? `${primary.name} — ${cleanedDesc}` : primary.name;
 };
 
 export default function XurItemCard({
@@ -64,8 +78,13 @@ export default function XurItemCard({
   onPress,
 }: XurItemCardProps) {
   const isExotic = item.rarity === 'Exotic';
+  const rarityColor = getRarityColor(item.rarity);
+  const classLabel = getClassLabel(item.classType);
+  const classColor = classLabel ? getClassColor(classLabel) : null;
   const metaLabel = getMetaLabel(item);
   const previewLine = getPerkPreviewLine(item);
+  const cleanedDescription = cleanBungieText(item.itemDescription);
+  const cleanedFlavor = cleanBungieText(item.flavorText);
 
   const imageUri = item.itemIcon.startsWith('http')
     ? item.itemIcon
@@ -73,29 +92,47 @@ export default function XurItemCard({
 
   const primaryCost = item.costs && item.costs.length > 0 ? item.costs[0] : null;
   const hasStats = Boolean(item.stats && item.stats.length > 0);
+  const isArmorType = ARMOR_TYPE_RE.test(item.itemTypeDisplayName || '');
   const isArmorStats =
-    hasStats && item.stats?.some((s) => s.name === 'Resilience' || s.name === 'Mobility');
+    hasStats &&
+    item.stats?.some((s) => s.name === 'Resilience' || s.name === 'Mobility');
   const totalArmorStat = isArmorStats
     ? item.stats!.reduce((sum, s) => sum + s.value, 0)
     : 0;
+
+  const costDisplay =
+    primaryCost && primaryCost.quantity > 0
+      ? primaryCost.quantity >= 1000
+        ? `${Math.round(primaryCost.quantity / 1000)}k`
+        : String(primaryCost.quantity)
+      : null;
+  const costUnit =
+    primaryCost && primaryCost.quantity > 0
+      ? getCurrencyName(primaryCost.itemHash)
+      : 'Quest';
+
+  const a11yLabel = `${item.itemName}, ${item.itemTypeDisplayName || item.rarity}${
+    metaLabel && metaLabel !== item.itemTypeDisplayName ? `, ${metaLabel}` : ''
+  }, ${costDisplay ? `${costDisplay} ${costUnit}` : 'Quest item'}`;
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
         expanded && styles.cardExpanded,
-        pressed && { opacity: 0.92 },
+        pressed && styles.cardPressed,
       ]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ expanded }}
+      accessibilityLabel={a11yLabel}
+      accessibilityHint={
+        expanded ? 'Tap to collapse item details' : 'Tap to view perks and stats'
+      }
     >
       {/* Main Row: Icon + Info + Price/Chevron */}
       <View style={styles.mainRow}>
-        <View
-          style={[
-            styles.iconWrap,
-            { borderColor: isExotic ? M.amber : M.borderActive },
-          ]}
-        >
+        <View style={[styles.iconWrap, { borderColor: rarityColor }]}>
           <Image source={{ uri: imageUri }} style={styles.itemIcon} />
         </View>
 
@@ -105,14 +142,38 @@ export default function XurItemCard({
           </Text>
 
           <View style={styles.metaRow}>
-            <Text style={styles.typeText}>
+            <Text style={styles.typeText} numberOfLines={1}>
               {item.itemTypeDisplayName || item.rarity}
             </Text>
             {metaLabel && metaLabel !== item.itemTypeDisplayName ? (
-              <>
-                <Text style={styles.dotSeparator}>·</Text>
-                <Text style={styles.metaTagText}>{metaLabel}</Text>
-              </>
+              <View style={styles.metaBadgeInline}>
+                <View
+                  style={[
+                    styles.classDot,
+                    {
+                      backgroundColor:
+                        classColor && metaLabel === classLabel
+                          ? classColor
+                          : item.rollType === 'curated'
+                          ? M.acid
+                          : M.ash,
+                    },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.metaTagText,
+                    classColor && metaLabel === classLabel
+                      ? { color: classColor }
+                      : item.rollType === 'curated'
+                      ? { color: M.acid }
+                      : null,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {metaLabel}
+                </Text>
+              </View>
             ) : null}
           </View>
 
@@ -124,16 +185,17 @@ export default function XurItemCard({
         </View>
 
         <View style={styles.rightCol}>
-          {primaryCost && primaryCost.quantity > 0 ? (
+          {costDisplay ? (
             <View style={styles.costBox}>
-              <Text style={styles.costAmount}>
-                {primaryCost.quantity >= 1000
-                  ? `${Math.round(primaryCost.quantity / 1000)}k`
-                  : primaryCost.quantity}
+              <Text
+                style={[
+                  styles.costAmount,
+                  isExotic && { color: M.amber },
+                ]}
+              >
+                {costDisplay}
               </Text>
-              <Text style={styles.costUnit}>
-                {getCurrencyName(primaryCost.itemHash)}
-              </Text>
+              <Text style={styles.costUnit}>{costUnit}</Text>
             </View>
           ) : (
             <Text style={styles.freeTag}>Quest</Text>
@@ -141,22 +203,21 @@ export default function XurItemCard({
           <MaterialCommunityIcons
             name={expanded ? 'chevron-up' : 'chevron-down'}
             size={20}
-            color={expanded ? M.bone : M.ash}
+            color={expanded ? M.acid : M.ash}
           />
         </View>
       </View>
 
-      {/* Inline Expanded Details: Perks / Description / Stats / Lore */}
+      {/* Flat Inline Expanded Details — Zero Nested Cards */}
       {expanded && (
         <View style={styles.expandedSection}>
-          {/* Item Description (for Bounties, Engrams, Passages, Materials, Shaders) */}
-          {item.itemDescription ? (
-            <Text style={styles.itemFullDesc}>{item.itemDescription}</Text>
+          {cleanedDescription ? (
+            <Text style={styles.itemFullDesc}>{cleanedDescription}</Text>
           ) : null}
 
           {/* Perks & Weapon Rolls */}
           {item.perks && item.perks.length > 0 ? (
-            <View style={styles.perkList}>
+            <View style={styles.detailBlock}>
               <Text style={styles.sectionHeading}>
                 {item.rollType === 'curated'
                   ? 'Predefined Weapon Roll'
@@ -170,10 +231,15 @@ export default function XurItemCard({
                     ? perk.icon
                     : `https://www.bungie.net${perk.icon}`
                   : null;
+                const perkDesc = cleanBungieText(perk.description);
+                const isLast = idx === item.perks.length - 1;
                 return (
                   <View
                     key={`${perk.hash}-${idx}`}
-                    style={styles.perkDetailRow}
+                    style={[
+                      styles.perkDetailRow,
+                      !isLast && styles.perkRowBorder,
+                    ]}
                   >
                     {perkIconUri ? (
                       <Image
@@ -188,10 +254,8 @@ export default function XurItemCard({
                           <Text style={styles.perkSlotLabel}>{perk.slot}</Text>
                         ) : null}
                       </View>
-                      {perk.description ? (
-                        <Text style={styles.perkDetailDesc}>
-                          {perk.description}
-                        </Text>
+                      {perkDesc ? (
+                        <Text style={styles.perkDetailDesc}>{perkDesc}</Text>
                       ) : null}
                     </View>
                   </View>
@@ -200,9 +264,9 @@ export default function XurItemCard({
             </View>
           ) : null}
 
-          {/* Segmented Stats (Strictly Weapons & Armor only) */}
-          {hasStats && (
-            <View style={styles.statsContainer}>
+          {/* Segmented Stats (Strictly Real Weapon & Armor Stats Only) */}
+          {hasStats ? (
+            <View style={styles.detailBlock}>
               <View style={styles.statsHeaderRow}>
                 <Text style={styles.sectionHeading}>
                   {isArmorStats ? 'Armor Attributes' : 'Weapon Stats'}
@@ -220,14 +284,23 @@ export default function XurItemCard({
                   value={stat.value}
                   max={stat.maximum || 100}
                   segments={15}
+                  color={isExotic ? M.amber : M.bone}
                 />
               ))}
             </View>
-          )}
+          ) : isArmorType ? (
+            <View style={styles.detailBlock}>
+              <Text style={styles.noStatsNote}>
+                Stat distribution rolls dynamically per live vendor instance.
+              </Text>
+            </View>
+          ) : null}
 
           {/* Lore / Flavor Text */}
-          {item.flavorText ? (
-            <Text style={styles.flavorText}>"{item.flavorText}"</Text>
+          {cleanedFlavor ? (
+            <View style={styles.flavorWrap}>
+              <Text style={styles.flavorText}>"{cleanedFlavor}"</Text>
+            </View>
           ) : null}
         </View>
       )}
@@ -240,7 +313,7 @@ const styles = StyleSheet.create({
     backgroundColor: M.surface,
     borderWidth: 1,
     borderColor: M.border,
-    borderRadius: 6,
+    borderRadius: radii.card,
     marginBottom: 10,
     padding: 14,
   },
@@ -248,15 +321,19 @@ const styles = StyleSheet.create({
     borderColor: M.borderActive,
     backgroundColor: M.surfaceElevated,
   },
+  cardPressed: {
+    backgroundColor: M.surfaceElevated,
+  },
   mainRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    minHeight: 54,
   },
   iconWrap: {
-    width: 54,
-    height: 54,
-    borderRadius: 4,
+    width: 52,
+    height: 52,
+    borderRadius: radii.control,
     borderWidth: 1.5,
     overflow: 'hidden',
     backgroundColor: M.void,
@@ -280,16 +357,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 2,
-    gap: 6,
+    columnGap: 10,
+    rowGap: 2,
+    flexWrap: 'wrap',
   },
   typeText: {
     fontSize: 13,
     fontWeight: '500',
     color: M.inkSecondary,
   },
-  dotSeparator: {
-    color: M.ash,
-    fontSize: 13,
+  metaBadgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  classDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   metaTagText: {
     fontSize: 13,
@@ -306,7 +391,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     gap: 6,
-    minWidth: 64,
+    minWidth: 72,
   },
   costBox: {
     alignItems: 'flex-end',
@@ -316,9 +401,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: M.bone,
+    fontVariant: ['tabular-nums'],
   },
   costUnit: {
-    fontSize: 11,
+    fontSize: 12,
     color: M.ash,
     fontWeight: '500',
   },
@@ -334,6 +420,9 @@ const styles = StyleSheet.create({
     borderTopColor: M.border,
     gap: 14,
   },
+  detailBlock: {
+    paddingTop: 2,
+  },
   sectionHeading: {
     fontSize: 12,
     fontWeight: '700',
@@ -342,24 +431,24 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     marginBottom: 8,
   },
-  perkList: {
-    gap: 8,
-  },
   perkDetailRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: M.void,
-    padding: 12,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: M.border,
+    paddingVertical: 10,
+  },
+  perkRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
   },
   perkIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 4,
-    marginTop: 2,
+    width: 34,
+    height: 34,
+    borderRadius: radii.control,
+    backgroundColor: M.void,
+    borderWidth: 1,
+    borderColor: M.border,
+    marginTop: 1,
   },
   perkDetailTextCol: {
     flex: 1,
@@ -383,27 +472,23 @@ const styles = StyleSheet.create({
     color: M.ash,
   },
   perkDetailDesc: {
-    fontSize: 13,
+    fontSize: 13.5,
     color: M.inkSecondary,
-    lineHeight: 19,
+    lineHeight: 20,
   },
   itemFullDesc: {
     fontSize: 14,
     color: M.inkSecondary,
     lineHeight: 20,
   },
-  statsContainer: {
-    backgroundColor: M.void,
-    padding: 12,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: M.border,
-  },
   statsHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 4,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: M.border,
   },
   totalStatText: {
     fontFamily: 'SpaceMono',
@@ -411,6 +496,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: M.bone,
     marginBottom: 8,
+    fontVariant: ['tabular-nums'],
+  },
+  noStatsNote: {
+    fontSize: 12,
+    color: M.ash,
+    lineHeight: 18,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: M.border,
+  },
+  flavorWrap: {
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: M.border,
   },
   flavorText: {
     fontSize: 13,

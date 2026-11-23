@@ -1,7 +1,82 @@
 // Autonomous Warframe WorldState Telemetry Service (api.warframestat.us/pc)
 // Covers Open World Cycles, Baro Ki'Teer (Void Trader), Alerts, Void Fissures, Invasions, Sortie, Archon Hunt, and Nightwave
 
+import { fetchWithTimeout } from './api';
+
 const WF_API_BASE = 'https://api.warframestat.us/pc';
+const WARFRAME_CACHE_TTL_MS = 60 * 1000;
+
+interface CyclePhaseSpec {
+  state: string;
+  durationMs: number;
+}
+
+const CETUS_PHASES: CyclePhaseSpec[] = [
+  { state: 'DAY', durationMs: 100 * 60 * 1000 },
+  { state: 'NIGHT', durationMs: 50 * 60 * 1000 },
+];
+
+const VALLIS_PHASES: CyclePhaseSpec[] = [
+  { state: 'WARM', durationMs: 400 * 1000 },
+  { state: 'COLD', durationMs: 1200 * 1000 },
+];
+
+const CAMBION_PHASES: CyclePhaseSpec[] = [
+  { state: 'FASS', durationMs: 100 * 60 * 1000 },
+  { state: 'VOME', durationMs: 50 * 60 * 1000 },
+];
+
+const ZARIMAN_PHASES: CyclePhaseSpec[] = [
+  { state: 'CORPUS', durationMs: 150 * 60 * 1000 },
+  { state: 'GRINEER', durationMs: 150 * 60 * 1000 },
+];
+
+const DUVIRI_PHASES: CyclePhaseSpec[] = [
+  { state: 'JOY', durationMs: 120 * 60 * 1000 },
+  { state: 'ANGER', durationMs: 120 * 60 * 1000 },
+  { state: 'ENVY', durationMs: 120 * 60 * 1000 },
+  { state: 'SORROW', durationMs: 120 * 60 * 1000 },
+  { state: 'FEAR', durationMs: 120 * 60 * 1000 },
+];
+
+export function resolveCyclePhase(
+  rawState: string,
+  rawExpiry: string,
+  phases: CyclePhaseSpec[],
+  nowMs = Date.now()
+): { state: string; expiry: string; extrapolated: boolean } {
+  const normalized = (rawState || '').trim().toUpperCase();
+  const expiryMs = rawExpiry ? new Date(rawExpiry).getTime() : NaN;
+
+  if (!normalized || Number.isNaN(expiryMs) || expiryMs > nowMs) {
+    return {
+      state: normalized || 'UNKNOWN',
+      expiry: rawExpiry || '',
+      extrapolated: false,
+    };
+  }
+
+  const startIdx = phases.findIndex((p) => p.state === normalized);
+  if (startIdx === -1) {
+    return { state: normalized, expiry: rawExpiry, extrapolated: false };
+  }
+
+  const totalPeriod = phases.reduce((sum, p) => sum + p.durationMs, 0);
+  let elapsed = (nowMs - expiryMs) % totalPeriod;
+  let idx = (startIdx + 1) % phases.length;
+
+  while (elapsed >= phases[idx].durationMs) {
+    elapsed -= phases[idx].durationMs;
+    idx = (idx + 1) % phases.length;
+  }
+
+  const remainingMs = phases[idx].durationMs - elapsed;
+  return {
+    state: phases[idx].state,
+    expiry: new Date(nowMs + remainingMs).toISOString(),
+    extrapolated: true,
+  };
+}
 
 export interface WorldCycleInfo {
   id: string;
@@ -105,17 +180,48 @@ export interface WarframeTelemetryState {
   isLive: boolean;
   lastUpdated: string;
   cycles: WorldCycleInfo[];
-  voidTrader: VoidTraderInfo;
+  voidTrader: VoidTraderInfo | null;
   alerts: WarframeAlertInfo[];
   fissures: WarframeFissureInfo[];
   invasions: WarframeInvasionInfo[];
-  sortie: WarframeSortieInfo;
-  archonHunt: WarframeArchonInfo;
+  sortie: WarframeSortieInfo | null;
+  archonHunt: WarframeArchonInfo | null;
   nightwave: {
     season: number;
     phase: number;
     challenges: NightwaveChallenge[];
   };
+}
+
+function formatRewardItems(reward: any): string {
+  if (!reward || typeof reward !== 'object') return '';
+  const counted = Array.isArray(reward.countedItems)
+    ? reward.countedItems
+        .map((ci: any) => {
+          const label = ci?.type || ci?.key || '';
+          if (!label) return '';
+          return ci.count > 1 ? `${ci.count}x ${label}` : label;
+        })
+        .filter(Boolean)
+        .join(' + ')
+    : '';
+  const items = Array.isArray(reward.items)
+    ? reward.items.filter(Boolean).join(' + ')
+    : '';
+  return [counted, items].filter(Boolean).join(' + ');
+}
+
+function formatInvasionReward(reward: any): string {
+  if (!reward || typeof reward !== 'object') return 'None';
+  if (typeof reward.asString === 'string' && reward.asString.trim()) {
+    return reward.asString.trim();
+  }
+  const combined = formatRewardItems(reward);
+  if (combined) return combined;
+  if (typeof reward.credits === 'number' && reward.credits > 0) {
+    return `${reward.credits.toLocaleString()} Credits`;
+  }
+  return 'None';
 }
 
 export function formatRemainingTime(expiryIso: string, now = new Date()): string {
@@ -141,309 +247,431 @@ export function formatRemainingTime(expiryIso: string, now = new Date()): string
 
 class WarframeService {
   private cachedState: WarframeTelemetryState | null = null;
+  private cacheExpiresAt = 0;
   private pendingPromise: Promise<WarframeTelemetryState> | null = null;
+  private cacheGeneration = 0;
+  private cacheListeners = new Set<() => void>();
 
-  private async fetchEndpoint<T = any>(path: string): Promise<T | null> {
+  subscribeCacheInvalidation(cb: () => void): () => void {
+    this.cacheListeners.add(cb);
+    return () => {
+      this.cacheListeners.delete(cb);
+    };
+  }
+
+  clearCache() {
+    this.cacheGeneration += 1;
+    this.cachedState = null;
+    this.cacheExpiresAt = 0;
+    this.pendingPromise = null;
+    this.cacheListeners.forEach((cb) => {
+      try {
+        cb();
+      } catch {
+        // Isolate subscriber errors
+      }
+    });
+  }
+
+  private async fetchWorldState(): Promise<Record<string, any> | null> {
     try {
-      const response = await fetch(`${WF_API_BASE}/${path}?language=en`, {
+      const response = await fetchWithTimeout(`${WF_API_BASE}/?language=en`, {
         headers: {
           Accept: 'application/json',
         },
       });
       if (!response.ok) return null;
-      return await response.json();
+      const data = await response.json();
+      return data && typeof data === 'object' ? data : null;
     } catch {
       return null;
     }
   }
 
   async getTelemetry(forceRefresh = false): Promise<WarframeTelemetryState> {
-    if (!forceRefresh && this.cachedState) {
+    if (!forceRefresh && this.cachedState && Date.now() < this.cacheExpiresAt) {
       return this.cachedState;
+    }
+
+    if (!forceRefresh && this.cachedState) {
+      this.cachedState = null;
+      this.cacheExpiresAt = 0;
     }
 
     if (!forceRefresh && this.pendingPromise) {
       return this.pendingPromise;
     }
 
-    this.pendingPromise = this.loadTelemetry();
+    if (forceRefresh) {
+      this.cacheGeneration += 1;
+    }
+
+    const generation = this.cacheGeneration;
+    const promise = this.loadTelemetry(generation);
+    this.pendingPromise = promise;
     try {
-      return await this.pendingPromise;
+      return await promise;
     } finally {
-      this.pendingPromise = null;
+      if (this.pendingPromise === promise) {
+        this.pendingPromise = null;
+      }
     }
   }
 
-  private async loadTelemetry(): Promise<WarframeTelemetryState> {
-
+  private async loadTelemetry(
+    generation: number
+  ): Promise<WarframeTelemetryState> {
     try {
-      const [
-        cetus,
-        vallis,
-        cambion,
-        zariman,
-        duviri,
-        voidTraderRaw,
-        alertsRaw,
-        fissuresRaw,
-        invasionsRaw,
-        sortieRaw,
-        archonRaw,
-        nightwaveRaw,
-      ] = await Promise.all([
-        this.fetchEndpoint('cetusCycle'),
-        this.fetchEndpoint('vallisCycle'),
-        this.fetchEndpoint('cambionCycle'),
-        this.fetchEndpoint('zarimanCycle'),
-        this.fetchEndpoint('duviriCycle'),
-        this.fetchEndpoint('voidTrader'),
-        this.fetchEndpoint('alerts'),
-        this.fetchEndpoint('fissures'),
-        this.fetchEndpoint('invasions'),
-        this.fetchEndpoint('sortie'),
-        this.fetchEndpoint('archonHunt'),
-        this.fetchEndpoint('nightwave'),
-      ]);
+      const worldstate = await this.fetchWorldState();
 
-      if (cetus || vallis || voidTraderRaw || fissuresRaw) {
-        const cycles: WorldCycleInfo[] = [
-          {
-            id: 'cetus',
-            name: 'Plains of Eidolon',
-            zone: 'EARTH // CETUS',
-            code: 'CYC-01',
-            state: (cetus?.state || (cetus?.isDay ? 'DAY' : 'NIGHT')).toUpperCase(),
-            isPositiveState: Boolean(cetus?.isDay),
-            expiry: cetus?.expiry || '',
-            timeLeft: cetus?.timeLeft || '',
-            accentColor: cetus?.isDay ? '#FFB800' : '#00F0FF',
-          },
-          {
-            id: 'vallis',
-            name: 'Orb Vallis',
-            zone: 'VENUS // FORTUNA',
-            code: 'CYC-02',
-            state: (vallis?.state || (vallis?.isWarm ? 'WARM' : 'COLD')).toUpperCase(),
-            isPositiveState: Boolean(vallis?.isWarm),
-            expiry: vallis?.expiry || '',
-            timeLeft: vallis?.timeLeft || '',
-            accentColor: vallis?.isWarm ? '#FF3B00' : '#00F0FF',
-          },
-          {
-            id: 'cambion',
-            name: 'Cambion Drift',
-            zone: 'DEIMOS // NECRA',
-            code: 'CYC-03',
-            state: (cambion?.state || cambion?.active || 'FASS').toUpperCase(),
-            isPositiveState: (cambion?.state || '').toLowerCase() === 'fass',
-            expiry: cambion?.expiry || '',
-            timeLeft: cambion?.timeLeft || '',
-            accentColor:
-              (cambion?.state || '').toLowerCase() === 'fass' ? '#FF3B00' : '#00F0FF',
-          },
-          {
-            id: 'zariman',
-            name: 'Zariman Ten Zero',
-            zone: 'VOID // CHRYSLITH',
-            code: 'CYC-04',
-            state: (zariman?.state || (zariman?.isCorpus ? 'CORPUS' : 'GRINEER')).toUpperCase(),
-            isPositiveState: Boolean(zariman?.isCorpus),
-            expiry: zariman?.expiry || '',
-            timeLeft: zariman?.timeLeft || '',
-            accentColor: '#C8FF00',
-          },
-          {
-            id: 'duviri',
-            name: 'Duviri Spiral',
-            zone: 'PARADOX // SPIRAL',
-            code: 'CYC-05',
-            state: (duviri?.state || 'JOY').toUpperCase(),
-            isPositiveState: true,
-            expiry: duviri?.expiry || '',
-            timeLeft: '',
-            accentColor: '#B829FF',
-          },
-        ];
+      if (worldstate) {
+        const cetus = worldstate.cetusCycle;
+        const vallis = worldstate.vallisCycle;
+        const cambion = worldstate.cambionCycle;
+        const zariman = worldstate.zarimanCycle;
+        const duviri = worldstate.duviriCycle;
+        const voidTraderRaw = worldstate.voidTrader;
+        const alertsRaw = worldstate.alerts;
+        const fissuresRaw = worldstate.fissures;
+        const invasionsRaw = worldstate.invasions;
+        const sortieRaw = worldstate.sortie;
+        const archonRaw = worldstate.archonHunt;
+        const nightwaveRaw = worldstate.nightwave;
 
-        const nowMs = Date.now();
-        const vtActivation = voidTraderRaw?.activation
-          ? new Date(voidTraderRaw.activation).getTime()
-          : 0;
-        const vtExpiry = voidTraderRaw?.expiry
-          ? new Date(voidTraderRaw.expiry).getTime()
-          : 0;
-        const vtActive =
-          Boolean(voidTraderRaw?.active) ||
-          (vtActivation > 0 && vtActivation <= nowMs && vtExpiry > nowMs);
+        const hasRecognizedSection = Boolean(
+          cetus ||
+            vallis ||
+            cambion ||
+            zariman ||
+            duviri ||
+            voidTraderRaw ||
+            Array.isArray(alertsRaw) ||
+            Array.isArray(fissuresRaw) ||
+            Array.isArray(invasionsRaw) ||
+            sortieRaw ||
+            archonRaw ||
+            nightwaveRaw
+        );
 
-        const rawInventory: VoidTraderItem[] = Array.isArray(
-          voidTraderRaw?.inventory
-        )
-          ? voidTraderRaw.inventory.map((it: any) => ({
-              uniqueName: it.uniqueName,
-              item: it.item || 'Prisma Void Artifact',
-              ducats: it.ducats ?? 350,
-              credits: it.credits ?? 150000,
-            }))
-          : [];
+        if (hasRecognizedSection) {
+          const nowMs = Date.now();
+          const nowDate = new Date(nowMs);
+          const cycles: WorldCycleInfo[] = [];
 
-        const voidTrader: VoidTraderInfo = {
-          id: voidTraderRaw?.id || 'baro-1',
-          character: "Baro Ki'Teer // Void Trader",
-          location: voidTraderRaw?.location || 'Kronia Relay (Saturn)',
-          active: vtActive,
-          activation: voidTraderRaw?.activation || new Date().toISOString(),
-          expiry: voidTraderRaw?.expiry || new Date(nowMs + 86400000 * 4).toISOString(),
-          inventory:
-            rawInventory.length > 0
-              ? rawInventory
-              : this.getFallbackBaroInventory(),
-        };
+          if (cetus && (cetus.state || typeof cetus.isDay === 'boolean')) {
+            const rawState = cetus.state || (cetus.isDay ? 'DAY' : 'NIGHT');
+            const resolved = resolveCyclePhase(
+              rawState,
+              cetus.expiry || '',
+              CETUS_PHASES,
+              nowMs
+            );
+            const isDay = resolved.state === 'DAY';
+            cycles.push({
+              id: 'cetus',
+              name: 'Plains of Eidolon',
+              zone: 'EARTH // CETUS',
+              code: 'CYC-01',
+              state: resolved.state,
+              isPositiveState: isDay,
+              expiry: resolved.expiry,
+              timeLeft: resolved.extrapolated
+                ? formatRemainingTime(resolved.expiry, nowDate)
+                : cetus.timeLeft || '',
+              accentColor: isDay ? '#FFB800' : '#00F0FF',
+            });
+          }
 
-        const alerts: WarframeAlertInfo[] = Array.isArray(alertsRaw)
-          ? alertsRaw.slice(0, 8).map((a: any, i: number) => {
-              const m = a.mission || {};
-              const r = m.reward || {};
-              const counted = Array.isArray(r.countedItems)
-                ? r.countedItems
-                    .map((ci: any) => `${ci.count > 1 ? `${ci.count}x ` : ''}${ci.type || ci.key}`)
-                    .join(' + ')
-                : '';
-              const items = Array.isArray(r.items) ? r.items.join(' + ') : '';
-              const rewardText =
-                [counted, items, r.asString].filter(Boolean)[0] ||
-                'Tactical Resource Cache';
+          if (vallis && (vallis.state || typeof vallis.isWarm === 'boolean')) {
+            const rawState = vallis.state || (vallis.isWarm ? 'WARM' : 'COLD');
+            const resolved = resolveCyclePhase(
+              rawState,
+              vallis.expiry || '',
+              VALLIS_PHASES,
+              nowMs
+            );
+            const isWarm = resolved.state === 'WARM';
+            cycles.push({
+              id: 'vallis',
+              name: 'Orb Vallis',
+              zone: 'VENUS // FORTUNA',
+              code: 'CYC-02',
+              state: resolved.state,
+              isPositiveState: isWarm,
+              expiry: resolved.expiry,
+              timeLeft: resolved.extrapolated
+                ? formatRemainingTime(resolved.expiry, nowDate)
+                : vallis.timeLeft || '',
+              accentColor: isWarm ? '#FF3B00' : '#00F0FF',
+            });
+          }
 
-              return {
-                id: a.id || `alert-${i}`,
-                node: m.node || 'System Sector',
-                missionType: m.type || 'Tactical Alert',
-                faction: m.faction || 'Enemy Force',
-                rewardText,
-                credits: r.credits || 10000,
-                expiry: a.expiry || '',
-                thumbnail: r.thumbnail,
-              };
-            })
-          : [];
+          if (cambion && (cambion.state || cambion.active)) {
+            const rawState = cambion.state || cambion.active;
+            const resolved = resolveCyclePhase(
+              rawState,
+              cambion.expiry || '',
+              CAMBION_PHASES,
+              nowMs
+            );
+            const isFass = resolved.state === 'FASS';
+            cycles.push({
+              id: 'cambion',
+              name: 'Cambion Drift',
+              zone: 'DEIMOS // NECRA',
+              code: 'CYC-03',
+              state: resolved.state,
+              isPositiveState: isFass,
+              expiry: resolved.expiry,
+              timeLeft: resolved.extrapolated
+                ? formatRemainingTime(resolved.expiry, nowDate)
+                : cambion.timeLeft || '',
+              accentColor: isFass ? '#FF3B00' : '#00F0FF',
+            });
+          }
 
-        const fissures: WarframeFissureInfo[] = Array.isArray(fissuresRaw)
-          ? fissuresRaw
-              .filter((f: any) => !f.expired)
-              .sort((a: any, b: any) => (a.tierNum || 1) - (b.tierNum || 1))
-              .slice(0, 14)
-              .map((f: any, idx: number) => ({
-                id: f.id || `fissure-${idx}`,
-                node: f.node || 'Void Sector',
-                missionType: f.missionType || 'Exterminate',
-                enemy: f.enemy || 'Corrupted',
-                tier: f.tier || 'Lith',
-                tierNum: f.tierNum || 1,
-                expiry: f.expiry || '',
-                isStorm: Boolean(f.isStorm),
-                isHard: Boolean(f.isHard),
-              }))
-          : [];
+          if (
+            zariman &&
+            (zariman.state || typeof zariman.isCorpus === 'boolean')
+          ) {
+            const rawState =
+              zariman.state || (zariman.isCorpus ? 'CORPUS' : 'GRINEER');
+            const resolved = resolveCyclePhase(
+              rawState,
+              zariman.expiry || '',
+              ZARIMAN_PHASES,
+              nowMs
+            );
+            const isCorpus = resolved.state === 'CORPUS';
+            cycles.push({
+              id: 'zariman',
+              name: 'Zariman Ten Zero',
+              zone: 'VOID // CHRYSLITH',
+              code: 'CYC-04',
+              state: resolved.state,
+              isPositiveState: isCorpus,
+              expiry: resolved.expiry,
+              timeLeft: resolved.extrapolated
+                ? formatRemainingTime(resolved.expiry, nowDate)
+                : zariman.timeLeft || '',
+              accentColor: '#C8FF00',
+            });
+          }
 
-        const invasions: WarframeInvasionInfo[] = Array.isArray(invasionsRaw)
-          ? invasionsRaw
-              .filter((inv: any) => !inv.completed)
-              .slice(0, 8)
-              .map((inv: any, idx: number) => ({
-                id: inv.id || `inv-${idx}`,
-                node: inv.node || 'Contested Sector',
-                desc: inv.desc || 'Faction Offensive',
-                attackerFaction: inv.attacker?.faction || 'Attacker',
-                attackerReward:
-                  inv.attacker?.reward?.asString ||
-                  inv.attackerReward?.asString ||
-                  'Fieldron / Detonite',
-                defenderFaction: inv.defender?.faction || 'Defender',
-                defenderReward:
-                  inv.defender?.reward?.asString ||
-                  inv.defenderReward?.asString ||
-                  'Mutagen Mass / Forma',
-                completion: Math.max(0, Math.min(100, Math.round(inv.completion ?? 50))),
-                vsInfestation: Boolean(inv.vsInfestation),
-              }))
-          : [];
+          if (duviri && duviri.state) {
+            const resolved = resolveCyclePhase(
+              duviri.state,
+              duviri.expiry || '',
+              DUVIRI_PHASES,
+              nowMs
+            );
+            cycles.push({
+              id: 'duviri',
+              name: 'Duviri Spiral',
+              zone: 'PARADOX // SPIRAL',
+              code: 'CYC-05',
+              state: resolved.state,
+              isPositiveState: true,
+              expiry: resolved.expiry,
+              timeLeft: resolved.extrapolated
+                ? formatRemainingTime(resolved.expiry, nowDate)
+                : duviri.timeLeft || '',
+              accentColor: '#B829FF',
+            });
+          }
 
-        const sortie: WarframeSortieInfo = {
-          id: sortieRaw?.id || 'sortie-live',
-          boss: sortieRaw?.boss || 'General Sargas Ruk',
-          faction: sortieRaw?.faction || 'Grineer',
-          expiry: sortieRaw?.expiry || '',
-          variants: Array.isArray(sortieRaw?.variants)
-            ? sortieRaw.variants.map((v: any) => ({
-                missionType: v.missionType || 'Assault',
-                modifier: v.modifier || 'Augmented Enemy Armor',
-                node: v.node || 'Sector Node',
-              }))
-            : [],
-        };
+          let voidTrader: VoidTraderInfo | null = null;
+          if (voidTraderRaw) {
+            const vtActivation = voidTraderRaw.activation
+              ? new Date(voidTraderRaw.activation).getTime()
+              : 0;
+            const vtExpiry = voidTraderRaw.expiry
+              ? new Date(voidTraderRaw.expiry).getTime()
+              : 0;
+            const vtActive =
+              Boolean(voidTraderRaw.active) ||
+              (vtActivation > 0 && vtActivation <= nowMs && vtExpiry > nowMs);
 
-        const archonHunt: WarframeArchonInfo = {
-          id: archonRaw?.id || 'archon-live',
-          boss: archonRaw?.boss || 'Archon Amar',
-          faction: archonRaw?.faction || 'Narmer',
-          expiry: archonRaw?.expiry || '',
-          missions: Array.isArray(archonRaw?.missions)
-            ? archonRaw.missions.map((m: any) => ({
-                node: m.node || 'Narmer Sector',
-                type: m.type || 'Sabotage',
-              }))
-            : [],
-        };
+            const rawInventory: VoidTraderItem[] = Array.isArray(
+              voidTraderRaw.inventory
+            )
+              ? voidTraderRaw.inventory.map((it: any) => ({
+                  uniqueName: it.uniqueName,
+                  item: it.item || 'Prisma Void Artifact',
+                  ducats: it.ducats ?? 0,
+                  credits: it.credits ?? 0,
+                }))
+              : [];
 
-        const challenges: NightwaveChallenge[] = Array.isArray(
-          nightwaveRaw?.activeChallenges
-        )
-          ? nightwaveRaw.activeChallenges.slice(0, 8).map((c: any, idx: number) => ({
-              id: c.id || `nw-${idx}`,
-              title: c.title || 'Nightwave Directive',
-              desc: c.desc || 'Complete objective in Origin System.',
-              reputation: c.reputation || 4500,
-              isDaily: Boolean(c.isDaily),
-              isElite: Boolean(c.isElite),
-            }))
-          : [];
+            voidTrader = {
+              id: voidTraderRaw.id || 'baro-1',
+              character: "Baro Ki'Teer // Void Trader",
+              location: voidTraderRaw.location || 'Relay TBD',
+              active: vtActive,
+              activation: voidTraderRaw.activation || '',
+              expiry: voidTraderRaw.expiry || '',
+              inventory: rawInventory,
+            };
+          }
 
-        const result: WarframeTelemetryState = {
-          isLive: true,
-          lastUpdated: new Date().toISOString(),
-          cycles,
-          voidTrader,
-          alerts,
-          fissures,
-          invasions,
-          sortie,
-          archonHunt,
-          nightwave: {
-            season: nightwaveRaw?.season ?? 12,
-            phase: nightwaveRaw?.phase ?? 1,
-            challenges,
-          },
-        };
+          const alerts: WarframeAlertInfo[] = Array.isArray(alertsRaw)
+            ? alertsRaw.slice(0, 8).map((a: any, i: number) => {
+                const m = a.mission || {};
+                const r = m.reward || {};
+                const combinedItems = formatRewardItems(r);
+                const rewardText =
+                  combinedItems || r.asString || 'Tactical Resource Cache';
 
-        this.cachedState = result;
-        return result;
+                return {
+                  id: a.id || `alert-${i}`,
+                  node: m.node || 'System Sector',
+                  missionType: m.type || 'Tactical Alert',
+                  faction: m.faction || 'Enemy Force',
+                  rewardText,
+                  credits: r.credits ?? 0,
+                  expiry: a.expiry || '',
+                  thumbnail: r.thumbnail,
+                };
+              })
+            : [];
+
+          const activeFissures = Array.isArray(fissuresRaw)
+            ? fissuresRaw.filter((f: any) => !f.expired)
+            : [];
+          const futureFissures = activeFissures.filter((f: any) => {
+            const exp = f.expiry ? new Date(f.expiry).getTime() : NaN;
+            return !Number.isNaN(exp) && exp > nowMs;
+          });
+          const fissurePool =
+            futureFissures.length > 0 ? futureFissures : activeFissures;
+
+          const fissures: WarframeFissureInfo[] = fissurePool
+            .sort((a: any, b: any) => (a.tierNum || 1) - (b.tierNum || 1))
+            .slice(0, 14)
+            .map((f: any, idx: number) => ({
+              id: f.id || `fissure-${idx}`,
+              node: f.node || 'Void Sector',
+              missionType: f.missionType || 'Exterminate',
+              enemy: f.enemy || 'Corrupted',
+              tier: f.tier || 'Lith',
+              tierNum: f.tierNum || 1,
+              expiry: f.expiry || '',
+              isStorm: Boolean(f.isStorm),
+              isHard: Boolean(f.isHard),
+            }));
+
+          const invasions: WarframeInvasionInfo[] = Array.isArray(invasionsRaw)
+            ? invasionsRaw
+                .filter((inv: any) => !inv.completed)
+                .slice(0, 8)
+                .map((inv: any, idx: number) => {
+                  const vsInfestation = Boolean(inv.vsInfestation);
+                  const attackerRewardObj =
+                    inv.attacker?.reward ?? inv.attackerReward;
+                  const defenderRewardObj =
+                    inv.defender?.reward ?? inv.defenderReward;
+                  return {
+                    id: inv.id || `inv-${idx}`,
+                    node: inv.node || 'Contested Sector',
+                    desc: inv.desc || 'Faction Offensive',
+                    attackerFaction: inv.attacker?.faction || 'Attacker',
+                    attackerReward: vsInfestation
+                      ? 'None'
+                      : formatInvasionReward(attackerRewardObj),
+                    defenderFaction: inv.defender?.faction || 'Defender',
+                    defenderReward: formatInvasionReward(defenderRewardObj),
+                    completion: Math.max(
+                      0,
+                      Math.min(100, Math.round(inv.completion ?? 50))
+                    ),
+                    vsInfestation,
+                  };
+                })
+            : [];
+
+          const sortie: WarframeSortieInfo | null =
+            sortieRaw &&
+            (sortieRaw.boss ||
+              (Array.isArray(sortieRaw.variants) &&
+                sortieRaw.variants.length > 0))
+              ? {
+                  id: sortieRaw.id || 'sortie-live',
+                  boss: sortieRaw.boss || 'Unknown Commander',
+                  faction: sortieRaw.faction || 'Unknown',
+                  expiry: sortieRaw.expiry || '',
+                  variants: Array.isArray(sortieRaw.variants)
+                    ? sortieRaw.variants.map((v: any) => ({
+                        missionType: v.missionType || 'Assault',
+                        modifier: v.modifier || 'Augmented Enemy Armor',
+                        node: v.node || 'Sector Node',
+                      }))
+                    : [],
+                }
+              : null;
+
+          const archonHunt: WarframeArchonInfo | null =
+            archonRaw &&
+            (archonRaw.boss ||
+              (Array.isArray(archonRaw.missions) &&
+                archonRaw.missions.length > 0))
+              ? {
+                  id: archonRaw.id || 'archon-live',
+                  boss: archonRaw.boss || 'Unknown Archon',
+                  faction: archonRaw.faction || 'Narmer',
+                  expiry: archonRaw.expiry || '',
+                  missions: Array.isArray(archonRaw.missions)
+                    ? archonRaw.missions.map((m: any) => ({
+                        node: m.node || 'Narmer Sector',
+                        type: m.type || 'Sabotage',
+                      }))
+                    : [],
+                }
+              : null;
+
+          const challenges: NightwaveChallenge[] = Array.isArray(
+            nightwaveRaw?.activeChallenges
+          )
+            ? nightwaveRaw.activeChallenges
+                .slice(0, 8)
+                .map((c: any, idx: number) => ({
+                  id: c.id || `nw-${idx}`,
+                  title: c.title || 'Nightwave Directive',
+                  desc: c.desc || 'Complete objective in Origin System.',
+                  reputation: c.reputation ?? 4500,
+                  isDaily: Boolean(c.isDaily),
+                  isElite: Boolean(c.isElite),
+                }))
+            : [];
+
+          const result: WarframeTelemetryState = {
+            isLive: true,
+            lastUpdated: new Date(nowMs).toISOString(),
+            cycles,
+            voidTrader,
+            alerts,
+            fissures,
+            invasions,
+            sortie,
+            archonHunt,
+            nightwave: {
+              season: nightwaveRaw?.season ?? 0,
+              phase: nightwaveRaw?.phase ?? 0,
+              challenges,
+            },
+          };
+
+          if (this.cacheGeneration === generation) {
+            this.cachedState = result;
+            this.cacheExpiresAt = Date.now() + WARFRAME_CACHE_TTL_MS;
+          }
+          return result;
+        }
       }
     } catch (e) {
       console.warn('Warframe telemetry fallback triggered:', e);
     }
 
     return this.getFallbackTelemetry();
-  }
-
-  private getFallbackBaroInventory(): VoidTraderItem[] {
-    return [
-      { item: 'Primed Continuity', ducats: 350, credits: 100000 },
-      { item: 'Primed Flow', ducats: 350, credits: 110000 },
-      { item: 'Prisma Ignis Wraith', ducats: 550, credits: 250000 },
-      { item: 'Jolt', ducats: 300, credits: 150000 },
-      { item: 'Voltaic Strike', ducats: 300, credits: 150000 },
-      { item: "Ki'Teer Ephemera", ducats: 100, credits: 150000 },
-    ];
   }
 
   private getFallbackTelemetry(): WarframeTelemetryState {
@@ -515,7 +743,7 @@ class WarframeService {
         active: false,
         activation: new Date(Date.now() + 86400000 * 4).toISOString(),
         expiry: new Date(Date.now() + 86400000 * 6).toISOString(),
-        inventory: this.getFallbackBaroInventory(),
+        inventory: [],
       },
       alerts: [
         {

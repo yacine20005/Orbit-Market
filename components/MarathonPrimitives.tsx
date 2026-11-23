@@ -1,35 +1,70 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import Colors from '@/constants/Colors';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ViewStyle,
+  DimensionValue,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Colors, { radii, withAlpha } from '@/constants/Colors';
 
 const M = Colors.marathon;
 
+export type IconName = React.ComponentProps<
+  typeof MaterialCommunityIcons
+>['name'];
+
 /**
- * Restrained monochrome metadata tag — zero rainbow dots or neon borders
+ * Restrained Swiss Editorial metadata tag with optional semantic tint, dot, or icon.
  */
 export function StatusPill({
   label,
+  color,
   filled = false,
+  dot = false,
+  icon,
+  compact = false,
+  style,
 }: {
   label: string;
   color?: string;
   filled?: boolean;
+  dot?: boolean;
+  icon?: IconName;
+  compact?: boolean;
+  style?: ViewStyle;
 }) {
+  const accent = color || M.bone;
+  const bg = filled
+    ? accent
+    : color
+    ? withAlpha(color, 0.14)
+    : M.surfaceElevated;
+  const borderColor = filled
+    ? accent
+    : color
+    ? withAlpha(color, 0.34)
+    : M.border;
+  const fg = filled ? M.void : color ? color : M.inkSecondary;
+
   return (
     <View
       style={[
         styles.pill,
-        filled
-          ? { backgroundColor: M.bone, borderColor: M.bone }
-          : { backgroundColor: M.surfaceElevated, borderColor: M.border },
+        compact && styles.pillCompact,
+        { backgroundColor: bg, borderColor },
+        style,
       ]}
     >
-      <Text
-        style={[
-          styles.pillText,
-          { color: filled ? M.void : M.inkSecondary },
-        ]}
-      >
+      {dot ? (
+        <View style={[styles.pillDot, { backgroundColor: fg }]} />
+      ) : null}
+      {icon ? (
+        <MaterialCommunityIcons name={icon} size={13} color={fg} />
+      ) : null}
+      <Text style={[styles.pillText, { color: fg }]} numberOfLines={1}>
         {label}
       </Text>
     </View>
@@ -37,78 +72,104 @@ export function StatusPill({
 }
 
 /**
- * Clean Swiss Editorial section header — no colored vertical bars or boxed badges
+ * Standardized editorial top bar shared across all tabs.
+ */
+export function ScreenHeader({
+  title,
+  statusLabel,
+  statusColor,
+  statusDot = false,
+  rightElement,
+}: {
+  title: string;
+  statusLabel?: string;
+  statusColor?: string;
+  statusDot?: boolean;
+  rightElement?: React.ReactNode;
+}) {
+  return (
+    <View style={styles.topBar}>
+      <Text style={styles.screenTitle} accessibilityRole="header" numberOfLines={1}>
+        {title}
+      </Text>
+      {rightElement ? (
+        rightElement
+      ) : statusLabel ? (
+        <StatusPill
+          label={statusLabel}
+          color={statusColor}
+          dot={statusDot}
+          compact
+        />
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * Clean Swiss Editorial section header — bold title, optional subtitle, right tabular metadata.
+ * Exported as both SectionBarcodeHeader (compat) and SectionHeader.
  */
 export function SectionBarcodeHeader({
   title,
   subtitle,
   rightText,
+  rightColor,
+  accentColor,
 }: {
   index?: string;
   title: string;
   subtitle?: string;
   rightText?: string;
+  rightColor?: string;
   accentColor?: string;
 }) {
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionTextCol}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <View style={styles.sectionTitleRow}>
+          {accentColor ? (
+            <View
+              style={[styles.sectionDot, { backgroundColor: accentColor }]}
+            />
+          ) : null}
+          <Text
+            style={styles.sectionTitle}
+            accessibilityRole="header"
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+        </View>
         {subtitle ? (
           <Text style={styles.sectionSubtitle}>{subtitle}</Text>
         ) : null}
       </View>
       {rightText ? (
-        <Text style={styles.rightMetaText}>{rightText}</Text>
+        <Text
+          style={[
+            styles.rightMetaText,
+            rightColor ? { color: rightColor } : null,
+          ]}
+        >
+          {rightText}
+        </Text>
       ) : null}
     </View>
   );
 }
 
-/**
- * Architectural surface container
- */
-export function TelemetryFrame({
-  children,
-  headerLeft,
-  headerRight,
-  style,
-}: {
-  children: React.ReactNode;
-  accentColor?: string;
-  code?: string;
-  headerLeft?: string;
-  headerRight?: string;
-  invertedHeader?: boolean;
-  style?: ViewStyle;
-}) {
-  return (
-    <View style={[styles.frame, style]}>
-      {headerLeft || headerRight ? (
-        <View style={styles.frameHeader}>
-          {headerLeft ? (
-            <Text style={styles.frameHeaderTitle} numberOfLines={1}>
-              {headerLeft}
-            </Text>
-          ) : null}
-          {headerRight ? (
-            <Text style={styles.frameHeaderRight}>{headerRight}</Text>
-          ) : null}
-        </View>
-      ) : null}
-      <View style={styles.frameBody}>{children}</View>
-    </View>
-  );
-}
+export const SectionHeader = SectionBarcodeHeader;
 
 /**
- * Clean monochrome segmented stat bar for weapons & armor
+ * Clean segmented stat bar for weapons & armor.
  */
 export function SegmentedStatBar({
   label,
   value,
   max = 100,
   segments = 16,
+  color,
 }: {
   label: string;
   value: number;
@@ -116,11 +177,17 @@ export function SegmentedStatBar({
   segments?: number;
   color?: string;
 }) {
-  const ratio = Math.max(0, Math.min(1, value / (max || 100)));
+  const safeMax = max || 100;
+  const ratio = Math.max(0, Math.min(1, value / safeMax));
   const filledCount = Math.round(ratio * segments);
+  const activeColor = color || M.bone;
 
   return (
-    <View style={styles.statRow}>
+    <View
+      style={styles.statRow}
+      accessible
+      accessibilityLabel={`${label}: ${value} out of ${safeMax}`}
+    >
       <View style={styles.statLabelRow}>
         <Text style={styles.statLabel} numberOfLines={1}>
           {label}
@@ -136,7 +203,7 @@ export function SegmentedStatBar({
               style={[
                 styles.segmentCell,
                 {
-                  backgroundColor: active ? M.bone : M.border,
+                  backgroundColor: active ? activeColor : M.border,
                 },
               ]}
             />
@@ -147,19 +214,156 @@ export function SegmentedStatBar({
   );
 }
 
+/**
+ * Architectural tonal skeleton placeholder for loading states.
+ */
+export function SkeletonBlock({
+  height = 56,
+  width = '100%',
+  radius = radii.card,
+  style,
+}: {
+  height?: number;
+  width?: DimensionValue;
+  radius?: number;
+  style?: ViewStyle;
+}) {
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        styles.skeleton,
+        { height, width, borderRadius: radius },
+        style,
+      ]}
+    />
+  );
+}
+
+/**
+ * Non-blocking inline error banner with retry action.
+ */
+export function ErrorBanner({
+  message,
+  onRetry,
+  retryLabel = 'Retry',
+  style,
+}: {
+  message: string;
+  onRetry?: () => void;
+  retryLabel?: string;
+  style?: ViewStyle;
+}) {
+  return (
+    <View style={[styles.errorBanner, style]} accessibilityRole="alert">
+      <MaterialCommunityIcons
+        name="alert-circle-outline"
+        size={20}
+        color={M.vermilion}
+      />
+      <Text style={styles.errorText}>{message}</Text>
+      {onRetry ? (
+        <Pressable
+          style={({ pressed }) => [
+            styles.errorRetryBtn,
+            pressed && { opacity: 0.8 },
+          ]}
+          onPress={onRetry}
+          accessibilityRole="button"
+          accessibilityLabel={retryLabel}
+        >
+          <Text style={styles.errorRetryText}>{retryLabel}</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * Helpful, clean empty state card with optional recovery button.
+ */
+export function EmptyStateCard({
+  icon = 'information-outline',
+  title,
+  description,
+  actionLabel,
+  onAction,
+  style,
+}: {
+  icon?: IconName;
+  title: string;
+  description: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  style?: ViewStyle;
+}) {
+  return (
+    <View style={[styles.emptyCard, style]}>
+      <View style={styles.emptyIconWrap}>
+        <MaterialCommunityIcons name={icon} size={22} color={M.ash} />
+      </View>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      <Text style={styles.emptyDesc}>{description}</Text>
+      {actionLabel && onAction ? (
+        <Pressable
+          style={({ pressed }) => [
+            styles.emptyActionBtn,
+            pressed && { opacity: 0.85 },
+          ]}
+          onPress={onAction}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+        >
+          <Text style={styles.emptyActionText}>{actionLabel}</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    minHeight: 54,
+    paddingVertical: 10,
+    backgroundColor: M.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: M.border,
+    gap: 12,
+  },
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: M.bone,
+    letterSpacing: -0.4,
+    flexShrink: 1,
+  },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: radii.pill,
     borderWidth: 1,
+  },
+  pillCompact: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  pillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   pillText: {
     fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.2,
+    fontWeight: '700',
+    letterSpacing: 0.1,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -172,54 +376,35 @@ const styles = StyleSheet.create({
   sectionTextCol: {
     flex: 1,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   sectionTitle: {
     color: M.bone,
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: -0.3,
+    flexShrink: 1,
   },
   sectionSubtitle: {
     color: M.ash,
     fontSize: 13,
     marginTop: 2,
+    lineHeight: 18,
   },
   rightMetaText: {
     fontFamily: 'SpaceMono',
     fontSize: 12,
-    fontWeight: '600',
-    color: M.ash,
-  },
-  frame: {
-    backgroundColor: M.surface,
-    borderWidth: 1,
-    borderColor: M.border,
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  frameHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: M.surfaceElevated,
-    borderBottomWidth: 1,
-    borderBottomColor: M.border,
-  },
-  frameHeaderTitle: {
-    fontSize: 13,
     fontWeight: '700',
-    color: M.bone,
-    flex: 1,
-  },
-  frameHeaderRight: {
-    fontFamily: 'SpaceMono',
-    fontSize: 12,
-    fontWeight: '600',
     color: M.ash,
-  },
-  frameBody: {
-    padding: 14,
+    fontVariant: ['tabular-nums'],
   },
   statRow: {
     marginBottom: 10,
@@ -240,6 +425,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: M.bone,
+    fontVariant: ['tabular-nums'],
   },
   segmentTrack: {
     flexDirection: 'row',
@@ -250,5 +436,89 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     borderRadius: 1,
+  },
+  skeleton: {
+    backgroundColor: M.surface,
+    borderWidth: 1,
+    borderColor: M.border,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: withAlpha(M.vermilion, 0.12),
+    borderWidth: 1,
+    borderColor: withAlpha(M.vermilion, 0.34),
+    borderRadius: radii.card,
+    marginBottom: 14,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    color: M.bone,
+    lineHeight: 18,
+  },
+  errorRetryBtn: {
+    minHeight: 44,
+    minWidth: 56,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: radii.control,
+    backgroundColor: M.surfaceElevated,
+    borderWidth: 1,
+    borderColor: M.borderActive,
+  },
+  errorRetryText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: M.bone,
+  },
+  emptyCard: {
+    backgroundColor: M.surface,
+    borderWidth: 1,
+    borderColor: M.border,
+    borderRadius: radii.card,
+    padding: 20,
+    alignItems: 'flex-start',
+  },
+  emptyIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.control,
+    backgroundColor: M.surfaceElevated,
+    borderWidth: 1,
+    borderColor: M.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: M.bone,
+  },
+  emptyDesc: {
+    fontSize: 13.5,
+    color: M.inkSecondary,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  emptyActionBtn: {
+    marginTop: 14,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: radii.control,
+    backgroundColor: M.bone,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: M.void,
   },
 });
